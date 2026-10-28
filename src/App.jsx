@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FinanceProvider } from './context/FinanceContext';
+import BillSplittingLanding from './components/BillSplittingLanding';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CoolingOffModal from './components/CoolingOffModal';
+import DailyLimitModal from './components/DailyLimitModal';
 import TransactionModal from './components/TransactionModal';
 import SubscriptionModal from './components/SubscriptionModal';
 import SavingsGoalModal from './components/SavingsGoalModal';
@@ -11,7 +13,7 @@ import SavingsGoalModal from './components/SavingsGoalModal';
 import OverviewPage from './pages/OverviewPage';
 import TransactionsPage from './pages/TransactionsPage';
 import InsightsPage from './pages/InsightsPage';
-import BillSplittingPage from './pages/BillSplittingPage';
+import BillSplittingPage from './pages/BillSplittingPage'; // <-- IMPORTED HERE
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import SavingsGoalsPage from './pages/SavingsGoalsPage';
 import AffordabilityPage from './pages/AffordabilityPage';
@@ -59,7 +61,7 @@ function DashboardLayout() {
               }
             />
             <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/bills" element={<BillSplittingPage />} />
+            <Route path="/bills" element={<BillSplittingPage />} /> {/* <-- ROUTE ADDED HERE */}
             <Route
               path="/subscriptions"
               element={
@@ -96,6 +98,7 @@ function DashboardLayout() {
 
       {/* Global Modals */}
       <CoolingOffModal />
+      <DailyLimitModal />
 
       <TransactionModal
         isOpen={txModal.isOpen}
@@ -123,7 +126,13 @@ export default function App() {
   return (
     <FinanceProvider>
       <BrowserRouter>
-        <DashboardLayout />
+        <Routes>
+          {/* Main Landing Page */}
+          <Route path="/" element={<BillSplittingLanding />} />
+          
+          {/* Dashboard Area */}
+          <Route path="/dashboard/*" element={<DashboardLayout />} />
+        </Routes>
       </BrowserRouter>
     </FinanceProvider>
   );

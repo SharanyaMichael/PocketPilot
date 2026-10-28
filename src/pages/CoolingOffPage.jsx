@@ -14,7 +14,8 @@ import {
   PiggyBank,
   ArrowRight,
   Flame,
-  Plus
+  Plus,
+  Wallet
 } from 'lucide-react';
 
 const DURATION_PRESETS = [
@@ -25,7 +26,7 @@ const DURATION_PRESETS = [
 ];
 
 export default function CoolingOffPage({ onOpenNewTransaction }) {
-  const { cooldown, activateCooldown, cancelCooldownSession, cooldownLogs } = useFinance();
+  const { cooldown, activateCooldown, cancelCooldownSession, cooldownLogs, dailyLimit, updateDailyLimit } = useFinance();
 
   const [selectedDuration, setSelectedDuration] = useState(900); // 15 mins default
   const [customMinutes, setCustomMinutes] = useState('');
@@ -89,6 +90,32 @@ export default function CoolingOffPage({ onOpenNewTransaction }) {
           <Plus className="w-4 h-4 text-[#10B981]" />
           <span>Test Expense Intercept</span>
         </button>
+      </div>
+
+      {/* Optional Daily Spend Limit Section */}
+      <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Wallet className="w-4 h-4 text-[#10B981]" />
+            <h2 className="text-sm font-bold text-[#F0FDF4]">Optional Daily Spend Limit</h2>
+          </div>
+          <p className="text-xs text-[#A7C4B5]">
+            Set an automated daily limit. Whenever any transaction crosses this cap, an instant cooling-off pop-up will offer you a choice to skip & back off or proceed.
+          </p>
+        </div>
+
+        <div className="min-w-[220px] relative">
+          <span className="absolute left-3 top-2.5 text-[#A7C4B5] font-mono text-sm">₹</span>
+          <input
+            type="number"
+            min="0"
+            step="100"
+            placeholder="Disabled (e.g. 2000)"
+            value={dailyLimit}
+            onChange={(e) => updateDailyLimit(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.2)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] font-mono placeholder:text-[#A7C4B5]/40"
+          />
+        </div>
       </div>
 
       {/* Main Status & Activation Grid */}

@@ -15,15 +15,15 @@ import {
 
 export default function Sidebar({ isOpen, onClose }) {
   const navItems = [
-    { path: '/', label: 'Overview', icon: LayoutDashboard, exact: true },
-    { path: '/transactions', label: 'Transactions', icon: Receipt },
-    { path: '/insights', label: 'Spending Insights', icon: BarChart3 },
-    { path: '/bills', label: 'Bill Splitting', icon: Users }, // <-- BILL SPLITTING LINK
-    { path: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
-    { path: '/savings-goals', label: 'Savings Goals', icon: Target },
-    { path: '/affordability', label: 'Affordability Checker', icon: Calculator },
-    { path: '/cooling-off', label: 'Cooling-Off Mode', icon: Clock },
-    { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+    { path: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
+    { path: '/dashboard/insights', label: 'Spending Insights', icon: BarChart3 },
+    { path: '/dashboard/bills', label: 'Bill Splitting', icon: Users },
+    { path: '/dashboard/subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { path: '/dashboard/savings-goals', label: 'Savings Goals', icon: Target },
+    { path: '/dashboard/affordability', label: 'Affordability Checker', icon: Calculator },
+    { path: '/dashboard/cooling-off', label: 'Cooling-Off Mode', icon: Clock },
+    { path: '/dashboard/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -49,7 +49,9 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
               <div>
                 <h2 className="font-bold text-base text-[#F0FDF4] leading-none">PocketPilot</h2>
-                <span className="text-[10px] uppercase tracking-wider text-[#71877D] font-medium">Finance Architecture</span>
+                <span className="text-[10px] uppercase tracking-wider text-[#71877D] font-medium">
+                  Personal Finance Manager
+                </span>
               </div>
             </div>
             <button onClick={onClose} className="lg:hidden text-[#71877D] hover:text-[#F0FDF4]">

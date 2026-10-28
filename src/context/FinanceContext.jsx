@@ -25,6 +25,12 @@ export function FinanceProvider({ children }) {
     currency_symbol: '₹',
     demo_mode_enabled: true
   });
+
+  // Optional Daily Limit State
+  const [dailyLimit, setDailyLimit] = useState(() => {
+    return localStorage.getItem('pocket_pilot_daily_limit') || '';
+  });
+
   const [insightsData, setInsightsData] = useState({ insights: [], has_user_data: false });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,11 +39,23 @@ export function FinanceProvider({ children }) {
   const [interceptModal, setInterceptModal] = useState({
     isOpen: false,
     attemptedPurchase: null,
+    todaySpent: 0,
+    dailyLimit: null,
+    reason: 'cooldown', // 'cooldown' or 'daily_limit'
     onSuccessCallback: null
   });
 
   // Ticking timer for Cooldown Mode
   const timerRef = useRef(null);
+
+  const updateDailyLimit = (value) => {
+    setDailyLimit(value);
+    if (value) {
+      localStorage.setItem('pocket_pilot_daily_limit', value);
+    } else {
+      localStorage.removeItem('pocket_pilot_daily_limit');
+    }
+  };
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -184,21 +202,60 @@ export function FinanceProvider({ children }) {
   }, [cooldown.is_active, cooldown.expiry_time, fetchCooldown]);
 
   const addTransaction = async (txData, overrideCooldown = false) => {
-    if (txData.type === 'expense' && cooldown.is_active && !overrideCooldown) {
+    const isExpense = (txData.type || 'expense').toLowerCase() === 'expense';
+
+    // 1. Check Global Cooldown Mode Active Interception
+    if (isExpense && cooldown.is_active && !overrideCooldown) {
       return new Promise((resolve) => {
         setInterceptModal({
           isOpen: true,
           attemptedPurchase: txData,
+          reason: 'cooldown',
           onSuccessCallback: async (shouldSave, overridden) => {
             if (shouldSave) {
               const res = await executeAddTransaction(txData, true);
               resolve({ intercepted: true, saved: true, result: res });
             } else {
+              await logCooldownAction('CANCELLED', txData, 'Cancelled during Global Cooldown');
               resolve({ intercepted: true, saved: false });
             }
           }
         });
       });
+    }
+
+    // 2. Check Optional Daily Limit Interception
+    if (isExpense && dailyLimit && Number(dailyLimit) > 0 && !overrideCooldown) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todaySpent = transactions
+        .filter(tx => (tx.type || 'expense').toLowerCase() === 'expense' && tx.date?.startsWith(todayStr))
+        .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+      const newAmount = Number(txData.amount || 0);
+
+      if (todaySpent + newAmount > Number(dailyLimit)) {
+        return new Promise((resolve) => {
+          setInterceptModal({
+            isOpen: true,
+            attemptedPurchase: txData,
+            todaySpent,
+            dailyLimit: Number(dailyLimit),
+            reason: 'daily_limit',
+            onSuccessCallback: async (shouldSave, overridden) => {
+              if (shouldSave) {
+                const res = await executeAddTransaction(txData, true);
+                if (overridden) {
+                  await logCooldownAction('OVERRIDDEN', txData, 'Daily spend limit exceeded but overridden');
+                }
+                resolve({ intercepted: true, saved: true, result: res });
+              } else {
+                await logCooldownAction('CANCELLED', txData, 'Cancelled after exceeding Daily Limit');
+                resolve({ intercepted: true, saved: false });
+              }
+            }
+          });
+        });
+      }
     }
 
     const res = await executeAddTransaction(txData, overrideCooldown);
@@ -215,7 +272,6 @@ export function FinanceProvider({ children }) {
 
       if (!res.ok) {
         if (res.status === 423) {
-          const data = await res.json();
           throw new Error('Expense intercepted by active Cooling-Off Mode');
         }
         throw new Error('Failed to create transaction');
@@ -298,7 +354,7 @@ export function FinanceProvider({ children }) {
         body: JSON.stringify({
           action,
           attempted_amount: attemptedPurchase.amount,
-          merchant: attemptedPurchase.clean_merchant || attemptedPurchase.description,
+          merchant: attemptedPurchase.clean_merchant || attemptedPurchase.description || attemptedPurchase.title || 'Expense Item',
           category: attemptedPurchase.category || 'Shopping',
           notes
         })
@@ -404,7 +460,14 @@ export function FinanceProvider({ children }) {
   };
 
   const closeInterceptModal = () => {
-    setInterceptModal({ isOpen: false, attemptedPurchase: null, onSuccessCallback: null });
+    setInterceptModal({
+      isOpen: false,
+      attemptedPurchase: null,
+      todaySpent: 0,
+      dailyLimit: null,
+      reason: 'cooldown',
+      onSuccessCallback: null
+    });
   };
 
   return (
@@ -416,6 +479,8 @@ export function FinanceProvider({ children }) {
       cooldown,
       cooldownLogs,
       settings,
+      dailyLimit,
+      updateDailyLimit,
       insightsData,
       isLoading,
       error,
