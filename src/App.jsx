@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FinanceProvider } from './context/FinanceContext';
-import BillSplittingLanding from './components/BillSplittingLanding';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CoolingOffModal from './components/CoolingOffModal';
@@ -122,13 +121,7 @@ export default function App() {
   return (
     <FinanceProvider>
       <BrowserRouter>
-        <Routes>
-          {/* Main Landing Page */}
-          <Route path="/" element={<BillSplittingLanding />} />
-          
-          {/* Dashboard Area */}
-          <Route path="/dashboard/*" element={<DashboardLayout />} />
-        </Routes>
+        <DashboardLayout />
       </BrowserRouter>
     </FinanceProvider>
   );
