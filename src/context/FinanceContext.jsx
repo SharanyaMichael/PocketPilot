@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const FinanceContext = createContext(null);
 
 export function FinanceProvider({ children }) {
@@ -39,7 +41,7 @@ export function FinanceProvider({ children }) {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await fetch('/api/summary');
+      const res = await fetch(`${API_BASE}/api/summary`);
       if (res.ok) {
         const data = await res.json();
         setSummary(data);
@@ -58,7 +60,7 @@ export function FinanceProvider({ children }) {
       if (filters.start_date) query.append('start_date', filters.start_date);
       if (filters.end_date) query.append('end_date', filters.end_date);
 
-      const res = await fetch(`/api/transactions?${query.toString()}`);
+      const res = await fetch(`${API_BASE}/api/transactions?${query.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setTransactions(data);
@@ -70,7 +72,7 @@ export function FinanceProvider({ children }) {
 
   const fetchSubscriptions = useCallback(async () => {
     try {
-      const res = await fetch('/api/subscriptions');
+      const res = await fetch(`${API_BASE}/api/subscriptions`);
       if (res.ok) {
         const data = await res.json();
         setSubscriptions(data);
@@ -82,7 +84,7 @@ export function FinanceProvider({ children }) {
 
   const fetchSavingsGoals = useCallback(async () => {
     try {
-      const res = await fetch('/api/savings-goals');
+      const res = await fetch(`${API_BASE}/api/savings-goals`);
       if (res.ok) {
         const data = await res.json();
         setSavingsGoals(data);
@@ -94,7 +96,7 @@ export function FinanceProvider({ children }) {
 
   const fetchCooldown = useCallback(async () => {
     try {
-      const res = await fetch('/api/cooldown');
+      const res = await fetch(`${API_BASE}/api/cooldown`);
       if (res.ok) {
         const data = await res.json();
         setCooldown(data);
@@ -106,7 +108,7 @@ export function FinanceProvider({ children }) {
 
   const fetchCooldownLogs = useCallback(async () => {
     try {
-      const res = await fetch('/api/cooldown/logs');
+      const res = await fetch(`${API_BASE}/api/cooldown/logs`);
       if (res.ok) {
         const data = await res.json();
         setCooldownLogs(data);
@@ -118,7 +120,7 @@ export function FinanceProvider({ children }) {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(`${API_BASE}/api/settings`);
       if (res.ok) {
         const data = await res.json();
         setSettings(data);
@@ -130,7 +132,7 @@ export function FinanceProvider({ children }) {
 
   const fetchInsights = useCallback(async () => {
     try {
-      const res = await fetch('/api/insights');
+      const res = await fetch(`${API_BASE}/api/insights`);
       if (res.ok) {
         const data = await res.json();
         setInsightsData(data);
@@ -208,7 +210,7 @@ export function FinanceProvider({ children }) {
 
   const executeAddTransaction = async (txData, overrideCooldown) => {
     try {
-      const res = await fetch('/api/transactions', {
+      const res = await fetch(`${API_BASE}/api/transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...txData, override_cooldown: overrideCooldown })
@@ -234,7 +236,7 @@ export function FinanceProvider({ children }) {
 
   const updateTransaction = async (id, updateData) => {
     try {
-      const res = await fetch(`/api/transactions/${id}`, {
+      const res = await fetch(`${API_BASE}/api/transactions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
@@ -251,7 +253,7 @@ export function FinanceProvider({ children }) {
 
   const deleteTransaction = async (id) => {
     try {
-      const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/transactions/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete transaction');
       await Promise.all([fetchSummary(), fetchTransactions(), fetchInsights()]);
       return true;
@@ -264,7 +266,7 @@ export function FinanceProvider({ children }) {
   // Cooldown actions
   const activateCooldown = async (durationSeconds, reason = '') => {
     try {
-      const res = await fetch('/api/cooldown/activate', {
+      const res = await fetch(`${API_BASE}/api/cooldown/activate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ duration_seconds: durationSeconds, reason })
@@ -282,7 +284,7 @@ export function FinanceProvider({ children }) {
 
   const cancelCooldownSession = async () => {
     try {
-      const res = await fetch('/api/cooldown/cancel-session', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/cooldown/cancel-session`, { method: 'POST' });
       if (res.ok) {
         setCooldown(prev => ({ ...prev, is_active: false, remaining_seconds: 0 }));
         await fetchSummary();
@@ -295,7 +297,7 @@ export function FinanceProvider({ children }) {
 
   const logCooldownAction = async (action, attemptedPurchase, notes = '') => {
     try {
-      await fetch('/api/cooldown/intercept-action', {
+      await fetch(`${API_BASE}/api/cooldown/intercept-action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -307,154 +309,3 @@ export function FinanceProvider({ children }) {
         })
       });
       await fetchCooldownLogs();
-    } catch (e) {
-      console.error('Failed to log cooldown action:', e);
-    }
-  };
-
-  // Subscriptions
-  const addSubscription = async (subData) => {
-    const res = await fetch('/api/subscriptions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subData)
-    });
-    if (!res.ok) throw new Error('Failed to create subscription');
-    const created = await res.json();
-    await Promise.all([fetchSubscriptions(), fetchSummary()]);
-    return created;
-  };
-
-  const updateSubscription = async (id, updateData) => {
-    const res = await fetch(`/api/subscriptions/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData)
-    });
-    if (!res.ok) throw new Error('Failed to update subscription');
-    const updated = await res.json();
-    await Promise.all([fetchSubscriptions(), fetchSummary()]);
-    return updated;
-  };
-
-  const deleteSubscription = async (id) => {
-    const res = await fetch(`/api/subscriptions/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete subscription');
-    await Promise.all([fetchSubscriptions(), fetchSummary()]);
-    return true;
-  };
-
-  // Savings Goals
-  const addSavingsGoal = async (goalData) => {
-    const res = await fetch('/api/savings-goals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(goalData)
-    });
-    if (!res.ok) throw new Error('Failed to create goal');
-    const created = await res.json();
-    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
-    return created;
-  };
-
-  const updateSavingsGoal = async (id, updateData) => {
-    const res = await fetch(`/api/savings-goals/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData)
-    });
-    if (!res.ok) throw new Error('Failed to update goal');
-    const updated = await res.json();
-    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
-    return updated;
-  };
-
-  const contributeToGoal = async (id, amount) => {
-    const res = await fetch(`/api/savings-goals/${id}/contribute`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount })
-    });
-    if (!res.ok) throw new Error('Failed to contribute to goal');
-    const updated = await res.json();
-    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
-    return updated;
-  };
-
-  const deleteSavingsGoal = async (id) => {
-    const res = await fetch(`/api/savings-goals/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete goal');
-    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
-    return true;
-  };
-
-  // Settings
-  const updateSettings = async (newSettings) => {
-    const res = await fetch('/api/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newSettings)
-    });
-    if (!res.ok) throw new Error('Failed to update settings');
-    const saved = await res.json();
-    setSettings(saved);
-    await Promise.all([fetchSummary(), fetchInsights()]);
-    return saved;
-  };
-
-  const resetDemoData = async (mode = 'restore') => {
-    const res = await fetch(`/api/demo-data/reset?mode=${mode}`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to reset data');
-    await refreshAll();
-    return true;
-  };
-
-  const closeInterceptModal = () => {
-    setInterceptModal({ isOpen: false, attemptedPurchase: null, onSuccessCallback: null });
-  };
-
-  return (
-    <FinanceContext.Provider value={{
-      summary,
-      transactions,
-      subscriptions,
-      savingsGoals,
-      cooldown,
-      cooldownLogs,
-      settings,
-      insightsData,
-      isLoading,
-      error,
-      refreshAll,
-      fetchTransactions,
-      addTransaction,
-      updateTransaction,
-      deleteTransaction,
-      addSubscription,
-      updateSubscription,
-      deleteSubscription,
-      addSavingsGoal,
-      updateSavingsGoal,
-      contributeToGoal,
-      deleteSavingsGoal,
-      activateCooldown,
-      cancelCooldownSession,
-      logCooldownAction,
-      updateSettings,
-      resetDemoData,
-      interceptModal,
-      closeInterceptModal,
-      setInterceptModal
-    }}>
-      {children}
-    </FinanceContext.Provider>
-  );
-}
-
-export function useFinance() {
-  const context = useContext(FinanceContext);
-  if (!context) {
-    throw new Error('useFinance must be used within a FinanceProvider');
-  }
-  return context;
-}
