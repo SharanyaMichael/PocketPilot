@@ -170,7 +170,6 @@ export function FinanceProvider({ children }) {
         setCooldown(prev => {
           if (!prev.is_active || prev.remaining_seconds <= 1) {
             clearInterval(timerRef.current);
-            // Re-fetch to ensure backend state aligns
             fetchCooldown();
             return { ...prev, is_active: false, remaining_seconds: 0 };
           }
@@ -184,9 +183,7 @@ export function FinanceProvider({ children }) {
     };
   }, [cooldown.is_active, cooldown.expiry_time, fetchCooldown]);
 
-  // Add transaction with global cooldown check
   const addTransaction = async (txData, overrideCooldown = false) => {
-    // If expense and cooldown is active, intercept!
     if (txData.type === 'expense' && cooldown.is_active && !overrideCooldown) {
       return new Promise((resolve) => {
         setInterceptModal({
@@ -218,7 +215,6 @@ export function FinanceProvider({ children }) {
 
       if (!res.ok) {
         if (res.status === 423) {
-          // Backend also rejected due to cooling-off mode!
           const data = await res.json();
           throw new Error('Expense intercepted by active Cooling-Off Mode');
         }
@@ -263,7 +259,6 @@ export function FinanceProvider({ children }) {
     }
   };
 
-  // Cooldown actions
   const activateCooldown = async (durationSeconds, reason = '') => {
     try {
       const res = await fetch(`${API_BASE}/api/cooldown/activate`, {
@@ -309,3 +304,151 @@ export function FinanceProvider({ children }) {
         })
       });
       await fetchCooldownLogs();
+    } catch (e) {
+      console.error('Failed to log cooldown action:', e);
+    }
+  };
+
+  const addSubscription = async (subData) => {
+    const res = await fetch(`${API_BASE}/api/subscriptions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subData)
+    });
+    if (!res.ok) throw new Error('Failed to create subscription');
+    const created = await res.json();
+    await Promise.all([fetchSubscriptions(), fetchSummary()]);
+    return created;
+  };
+
+  const updateSubscription = async (id, updateData) => {
+    const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    });
+    if (!res.ok) throw new Error('Failed to update subscription');
+    const updated = await res.json();
+    await Promise.all([fetchSubscriptions(), fetchSummary()]);
+    return updated;
+  };
+
+  const deleteSubscription = async (id) => {
+    const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete subscription');
+    await Promise.all([fetchSubscriptions(), fetchSummary()]);
+    return true;
+  };
+
+  const addSavingsGoal = async (goalData) => {
+    const res = await fetch(`${API_BASE}/api/savings-goals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(goalData)
+    });
+    if (!res.ok) throw new Error('Failed to create goal');
+    const created = await res.json();
+    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
+    return created;
+  };
+
+  const updateSavingsGoal = async (id, updateData) => {
+    const res = await fetch(`${API_BASE}/api/savings-goals/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    });
+    if (!res.ok) throw new Error('Failed to update goal');
+    const updated = await res.json();
+    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
+    return updated;
+  };
+
+  const contributeToGoal = async (id, amount) => {
+    const res = await fetch(`${API_BASE}/api/savings-goals/${id}/contribute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    if (!res.ok) throw new Error('Failed to contribute to goal');
+    const updated = await res.json();
+    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
+    return updated;
+  };
+
+  const deleteSavingsGoal = async (id) => {
+    const res = await fetch(`${API_BASE}/api/savings-goals/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete goal');
+    await Promise.all([fetchSavingsGoals(), fetchSummary()]);
+    return true;
+  };
+
+  const updateSettings = async (newSettings) => {
+    const res = await fetch(`${API_BASE}/api/settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newSettings)
+    });
+    if (!res.ok) throw new Error('Failed to update settings');
+    const saved = await res.json();
+    setSettings(saved);
+    await Promise.all([fetchSummary(), fetchInsights()]);
+    return saved;
+  };
+
+  const resetDemoData = async (mode = 'restore') => {
+    const res = await fetch(`${API_BASE}/api/demo-data/reset?mode=${mode}`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to reset data');
+    await refreshAll();
+    return true;
+  };
+
+  const closeInterceptModal = () => {
+    setInterceptModal({ isOpen: false, attemptedPurchase: null, onSuccessCallback: null });
+  };
+
+  return (
+    <FinanceContext.Provider value={{
+      summary,
+      transactions,
+      subscriptions,
+      savingsGoals,
+      cooldown,
+      cooldownLogs,
+      settings,
+      insightsData,
+      isLoading,
+      error,
+      refreshAll,
+      fetchTransactions,
+      addTransaction,
+      updateTransaction,
+      deleteTransaction,
+      addSubscription,
+      updateSubscription,
+      deleteSubscription,
+      addSavingsGoal,
+      updateSavingsGoal,
+      contributeToGoal,
+      deleteSavingsGoal,
+      activateCooldown,
+      cancelCooldownSession,
+      logCooldownAction,
+      updateSettings,
+      resetDemoData,
+      interceptModal,
+      closeInterceptModal,
+      setInterceptModal
+    }}>
+      {children}
+    </FinanceContext.Provider>
+  );
+}
+
+export function useFinance() {
+  const context = useContext(FinanceContext);
+  if (!context) {
+    throw new Error('useFinance must be used within a FinanceProvider');
+  }
+  return context;
+}
