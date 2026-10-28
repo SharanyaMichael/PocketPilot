@@ -41,9 +41,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-[#091510] border-r border-[rgba(110,231,183,0.16)] flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-[#091510] border-r border-[rgba(110,231,183,0.16)] flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Brand header */}
         <div className="h-16 flex items-center px-6 border-b border-[rgba(110,231,183,0.16)] gap-3 bg-[#050B09]/40">
@@ -53,7 +52,6 @@ export default function Sidebar({ isOpen, onClose }) {
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-base tracking-tight text-[#F0FDF4]">PocketPilot</span>
-              <span className="px-1.5 py-0.2 bg-[#10B981]/20 border border-[#10B981]/40 rounded text-[9px] font-bold text-[#6EE7B7]">AI</span>
             </div>
             <span className="text-[10px] text-[#A7C4B5] tracking-wider uppercase font-medium">Finance Architecture</span>
           </div>
@@ -89,19 +87,17 @@ export default function Sidebar({ isOpen, onClose }) {
                 to={item.path}
                 onClick={() => onClose && onClose()}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
-                    isActive
-                      ? 'bg-[#11251B] text-[#6EE7B7] border border-[#10B981]/40 shadow-sm emerald-glow-sm'
-                      : 'text-[#A7C4B5] hover:text-[#F0FDF4] hover:bg-[#11251B]/50'
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${isActive
+                    ? 'bg-[#11251B] text-[#6EE7B7] border border-[#10B981]/40 shadow-sm emerald-glow-sm'
+                    : 'text-[#A7C4B5] hover:text-[#F0FDF4] hover:bg-[#11251B]/50'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <Icon
-                      className={`w-4 h-4 transition-colors ${
-                        isActive ? 'text-[#10B981]' : 'text-[#A7C4B5] group-hover:text-[#6EE7B7]'
-                      }`}
+                      className={`w-4 h-4 transition-colors ${isActive ? 'text-[#10B981]' : 'text-[#A7C4B5] group-hover:text-[#6EE7B7]'
+                        }`}
                     />
                     <span className="flex-1">{item.name}</span>
                     {item.name === 'Cooling-Off Mode' && cooldown.is_active && (
