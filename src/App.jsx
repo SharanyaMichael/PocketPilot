@@ -11,6 +11,7 @@ import SavingsGoalModal from './components/SavingsGoalModal';
 import OverviewPage from './pages/OverviewPage';
 import TransactionsPage from './pages/TransactionsPage';
 import InsightsPage from './pages/InsightsPage';
+import BillSplittingPage from './pages/BillSplittingPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import SavingsGoalsPage from './pages/SavingsGoalsPage';
 import AffordabilityPage from './pages/AffordabilityPage';
@@ -58,6 +59,7 @@ function DashboardLayout() {
               }
             />
             <Route path="/insights" element={<InsightsPage />} />
+            <Route path="/bills" element={<BillSplittingPage />} />
             <Route
               path="/subscriptions"
               element={
