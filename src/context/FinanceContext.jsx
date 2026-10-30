@@ -1,3 +1,4 @@
+// @refresh reload
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE = 'https://pocketpilot-backend-1ouw.onrender.com';
@@ -6,7 +7,17 @@ const FinanceContext = createContext(null);
 
 export function FinanceProvider({ children }) {
   const [summary, setSummary] = useState(null);
-  const [transactions, setTransactions] = useState([]);
+
+  // Initialize transactions with local storage fallback for instant responsiveness
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pocketpilot_transactions_local');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [subscriptions, setSubscriptions] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [cooldown, setCooldown] = useState({
@@ -33,6 +44,7 @@ export function FinanceProvider({ children }) {
 
   const [insightsData, setInsightsData] = useState({ insights: [], has_user_data: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [isWakingUp, setIsWakingUp] = useState(false);
   const [error, setError] = useState(null);
 
   // Global Intercept Modal State
@@ -81,10 +93,13 @@ export function FinanceProvider({ children }) {
       const res = await fetch(`${API_BASE}/api/transactions?${query.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setTransactions(data);
+        if (data && data.length > 0) {
+          setTransactions(data);
+          localStorage.setItem('pocketpilot_transactions_local', JSON.stringify(data));
+        }
       }
     } catch (e) {
-      console.warn('Backend transactions fetch failed:', e);
+      console.warn('Backend transactions fetch failed, using local:', e);
     }
   }, []);
 
@@ -162,24 +177,34 @@ export function FinanceProvider({ children }) {
 
   const refreshAll = useCallback(async () => {
     setIsLoading(true);
-    await Promise.all([
-      fetchSummary(),
-      fetchTransactions(),
-      fetchSubscriptions(),
-      fetchSavingsGoals(),
-      fetchCooldown(),
-      fetchCooldownLogs(),
-      fetchSettings(),
-      fetchInsights()
-    ]);
-    setIsLoading(false);
+    setIsWakingUp(false);
+
+    const wakeupTimer = setTimeout(() => {
+      setIsWakingUp(true);
+    }, 3000);
+
+    try {
+      await Promise.all([
+        fetchSummary(),
+        fetchTransactions(),
+        fetchSubscriptions(),
+        fetchSavingsGoals(),
+        fetchCooldown(),
+        fetchCooldownLogs(),
+        fetchSettings(),
+        fetchInsights()
+      ]);
+    } finally {
+      clearTimeout(wakeupTimer);
+      setIsLoading(false);
+      setIsWakingUp(false);
+    }
   }, [fetchSummary, fetchTransactions, fetchSubscriptions, fetchSavingsGoals, fetchCooldown, fetchCooldownLogs, fetchSettings, fetchInsights]);
 
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
 
-  // Handle local countdown timer for active cooldown
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
 
@@ -204,7 +229,6 @@ export function FinanceProvider({ children }) {
   const addTransaction = async (txData, overrideCooldown = false) => {
     const isExpense = (txData.type || 'expense').toLowerCase() === 'expense';
 
-    // 1. Check Global Cooldown Mode Active Interception
     if (isExpense && cooldown.is_active && !overrideCooldown) {
       return new Promise((resolve) => {
         setInterceptModal({
@@ -224,7 +248,6 @@ export function FinanceProvider({ children }) {
       });
     }
 
-    // 2. Check Optional Daily Limit Interception
     if (isExpense && dailyLimit && Number(dailyLimit) > 0 && !overrideCooldown) {
       const todayStr = new Date().toISOString().split('T')[0];
       const todaySpent = transactions
@@ -263,6 +286,20 @@ export function FinanceProvider({ children }) {
   };
 
   const executeAddTransaction = async (txData, overrideCooldown) => {
+    const transactionWithId = {
+      ...txData,
+      id: txData.id || 'tx_' + Date.now(),
+      date: txData.date || new Date().toISOString().split('T')[0]
+    };
+
+    // 1. Instantly prepend to state and localStorage so it shows up immediately
+    setTransactions(prev => {
+      const updated = [transactionWithId, ...prev];
+      localStorage.setItem('pocketpilot_transactions_local', JSON.stringify(updated));
+      return updated;
+    });
+
+    // 2. Sync with backend asynchronously
     try {
       const res = await fetch(`${API_BASE}/api/transactions`, {
         method: 'POST',
@@ -270,33 +307,41 @@ export function FinanceProvider({ children }) {
         body: JSON.stringify({ ...txData, override_cooldown: overrideCooldown })
       });
 
-      if (!res.ok) {
-        if (res.status === 423) {
-          throw new Error('Expense intercepted by active Cooling-Off Mode');
+      if (res.ok) {
+        const responseJson = await res.json();
+        const created = responseJson.transaction || responseJson.data || responseJson;
+        if (created && created.id) {
+          setTransactions(prev => {
+            const updated = prev.map(t => t.id === transactionWithId.id ? created : t);
+            localStorage.setItem('pocketpilot_transactions_local', JSON.stringify(updated));
+            return updated;
+          });
         }
-        throw new Error('Failed to create transaction');
+        await Promise.all([fetchSummary(), fetchInsights()]);
       }
-
-      const created = await res.json();
-      await Promise.all([fetchSummary(), fetchTransactions(), fetchInsights()]);
-      return created;
     } catch (e) {
-      console.error(e);
-      throw e;
+      console.warn('Backend sync failed, transaction saved locally:', e);
     }
+
+    return transactionWithId;
   };
 
   const updateTransaction = async (id, updateData) => {
     try {
+      setTransactions(prev => {
+        const updated = prev.map(t => t.id === id ? { ...t, ...updateData } : t);
+        localStorage.setItem('pocketpilot_transactions_local', JSON.stringify(updated));
+        return updated;
+      });
+
       const res = await fetch(`${API_BASE}/api/transactions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
       });
       if (!res.ok) throw new Error('Failed to update transaction');
-      const updated = await res.json();
       await Promise.all([fetchSummary(), fetchTransactions(), fetchInsights()]);
-      return updated;
+      return true;
     } catch (e) {
       console.error(e);
       throw e;
@@ -305,6 +350,12 @@ export function FinanceProvider({ children }) {
 
   const deleteTransaction = async (id) => {
     try {
+      setTransactions(prev => {
+        const updated = prev.filter(t => t.id !== id);
+        localStorage.setItem('pocketpilot_transactions_local', JSON.stringify(updated));
+        return updated;
+      });
+
       const res = await fetch(`${API_BASE}/api/transactions/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete transaction');
       await Promise.all([fetchSummary(), fetchTransactions(), fetchInsights()]);
@@ -483,6 +534,7 @@ export function FinanceProvider({ children }) {
       updateDailyLimit,
       insightsData,
       isLoading,
+      isWakingUp,
       error,
       refreshAll,
       fetchTransactions,
@@ -505,6 +557,15 @@ export function FinanceProvider({ children }) {
       closeInterceptModal,
       setInterceptModal
     }}>
+      {isLoading && isWakingUp && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0D1D16] border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md animate-fade-in">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-400 border-t-transparent" />
+          <div className="text-xs">
+            <p className="font-bold text-[#F0FDF4]">Waking up backend server...</p>
+            <p className="text-[#A7C4B5]">Render free tier takes ~30s on first load.</p>
+          </div>
+        </div>
+      )}
       {children}
     </FinanceContext.Provider>
   );

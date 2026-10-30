@@ -1,6 +1,5 @@
 import React from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, CATEGORY_COLORS } from '../utils/formatters';
 import {
   Sparkles,
   TrendingUp,
@@ -11,15 +10,14 @@ import {
   Cpu,
   Database,
   BarChart3,
-  Flame,
-  ArrowRight
+  Flame
 } from 'lucide-react';
 
 export default function InsightsPage() {
-  const { insightsData, summary, settings } = useFinance();
+  const { insightsData } = useFinance();
 
-  const insights = insightsData.insights || [];
-  const hasUserData = insightsData.has_user_data;
+  const insights = insightsData?.insights || [];
+  const hasUserData = insightsData?.has_user_data;
 
   const getVariantIcon = (type) => {
     switch (type) {
@@ -48,68 +46,84 @@ export default function InsightsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0D1D16] to-[#091510] border border-[rgba(110,231,183,0.16)]">
+    <div style={{ paddingBottom: '48px', width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* Header Banner */}
+      <div style={{ background: 'linear-gradient(to right, #0D1D16, #091510)', border: '1px solid rgba(110,231,183,0.16)', padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#10B981]/20 text-[#6EE7B7] border border-[#10B981]/30">
-              Deterministic Intelligence Engine
-            </span>
+          <div style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', background: 'rgba(16,185,129,0.2)', color: '#6EE7B7', border: '1px solid rgba(16,185,129,0.3)', fontSize: '10px', fontWeight: 'bold', marginBottom: '8px' }}>
+            Deterministic Intelligence Engine
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
+          <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#F0FDF4', margin: 0, letterSpacing: '-0.025em' }}>
             Smart Spending Insights
           </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
+          <p style={{ fontSize: '13px', color: '#A7C4B5', marginTop: '4px', margin: 0 }}>
             Rule-driven telemetry derived mathematically from your recorded transactions without simulated hallucinations.
           </p>
         </div>
 
         {/* Data Origin Pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#050B09] border border-white/10 text-xs text-[#A7C4B5]">
-          <Database className="w-3.5 h-3.5 text-[#10B981]" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '12px', background: '#050B09', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12px', color: '#A7C4B5' }}>
+          <Database style={{ width: '14px', height: '14px', color: '#10B981' }} />
           <span>{hasUserData ? 'Live User Transactions' : 'Baseline Demo Telemetry'}</span>
         </div>
       </div>
 
-      {/* Grid of Rule-Based Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {insights.map((insight) => (
+      {/* Grid of Rule-Based Insights (Forced 2-Column Grid Layout) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {insights.map((insight, idx) => (
           <div
-            key={insight.id}
-            className={`p-5 rounded-2xl border transition-all ${getVariantBorder(insight.type)} flex flex-col justify-between`}
+            key={insight.id || idx}
+            style={{
+              background: '#0D1D16',
+              border: insight.type === 'warning' ? '1px solid rgba(251,191,36,0.3)' : insight.type === 'negative' ? '1px solid rgba(251,113,133,0.3)' : '1px solid rgba(110,231,183,0.16)',
+              borderRadius: '16px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}
           >
             <div>
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="p-2.5 rounded-xl bg-[#11251B] border border-white/5 flex-shrink-0">
+              {/* Top Row: Icon on left, Badges on right */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px' }}>
+                <div style={{ padding: '12px', borderRadius: '12px', background: '#11251B', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {getVariantIcon(insight.type)}
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {insight.badge && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#11251B] text-[#6EE7B7] border border-[#10B981]/30">
+                    <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#11251B', color: '#6EE7B7', border: '1px solid rgba(16,185,129,0.3)' }}>
                       {insight.badge}
                     </span>
                   )}
-                  <span className="text-[10px] text-[#A7C4B5] font-mono uppercase">
-                    {insight.category}
-                  </span>
+                  {insight.category && (
+                    <span style={{ fontSize: '10px', color: '#A7C4B5', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {insight.category}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <h2 className="text-base font-bold text-[#F0FDF4] mb-1.5">
+              {/* Title */}
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', marginBottom: '8px', lineHeight: '1.4' }}>
                 {insight.title}
               </h2>
-              <p className="text-xs text-[#A7C4B5] leading-relaxed">
+
+              {/* Description */}
+              <p style={{ fontSize: '13px', color: '#A7C4B5', lineHeight: '1.5', margin: 0 }}>
                 {insight.description}
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[rgba(110,231,183,0.1)] flex items-center justify-between text-[11px] text-[#A7C4B5]">
-              <span className="flex items-center gap-1.5 text-[#6EE7B7]">
-                <BarChart3 className="w-3 h-3" />
+            {/* Footer */}
+            <div style={{ marginTop: '24px', paddingTop: '12px', borderTop: '1px solid rgba(110,231,183,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#A7C4B5' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6EE7B7' }}>
+                <BarChart3 style={{ width: '14px', height: '14px' }} />
                 <span>Computed from ledger records</span>
               </span>
-              <span className="text-[10px] text-[#A7C4B5]/60 font-mono">
+              <span style={{ fontSize: '10px', color: 'rgba(167,196,181,0.6)', fontFamily: 'monospace' }}>
                 Rule verified
               </span>
             </div>
@@ -118,15 +132,16 @@ export default function InsightsPage() {
       </div>
 
       {/* AI Roadmap & Transparency Card */}
-      <div className="p-5 rounded-2xl bg-[#091510] border border-[rgba(110,231,183,0.16)] text-xs text-[#A7C4B5]">
-        <div className="flex items-center gap-2 text-[#6EE7B7] font-semibold text-sm mb-2">
-          <Cpu className="w-4 h-4 text-[#10B981]" />
+      <div style={{ background: '#091510', border: '1px solid rgba(110,231,183,0.16)', padding: '24px', borderRadius: '16px', fontSize: '12px', color: '#A7C4B5' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6EE7B7', fontWeight: '600', fontSize: '14px', marginBottom: '8px' }}>
+          <Cpu style={{ width: '16px', height: '16px', color: '#10B981' }} />
           <span>AI Architecture & Model Transparency</span>
         </div>
-        <p className="leading-relaxed">
+        <p style={{ lineHeight: '1.6', margin: 0 }}>
           The insights above are generated via deterministic heuristic analysis across monthly boundaries, category aggregates, variance bounds, and standard deviation outlier detection. This guarantees 100% mathematical accuracy without hallucinating fake connected banks. A genuine LLM agent or on-device model can easily consume this structured summary JSON via our backend endpoints.
         </p>
       </div>
+
     </div>
   );
 }

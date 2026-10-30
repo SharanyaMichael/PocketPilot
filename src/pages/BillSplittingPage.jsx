@@ -1,5 +1,6 @@
+// @refresh reload
 import React, { useState } from 'react';
-import { Users, Plus, CheckCircle2, DollarSign, Receipt } from 'lucide-react';
+import { Users, Plus, DollarSign, Receipt } from 'lucide-react';
 
 export default function BillSplittingPage() {
   const [bills, setBills] = useState([
@@ -60,7 +61,6 @@ export default function BillSplittingPage() {
     );
   };
 
-  // Calculate stats
   let othersOweYou = 0;
   let unsettledCount = 0;
 
@@ -74,81 +74,73 @@ export default function BillSplittingPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-[#0A1612] border border-[#1C3930] rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-[#F0FDF4]">Bill Splitting</h1>
-            <span className="text-[11px] font-semibold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 px-2.5 py-0.5 rounded-full">
-              Simulated
-            </span>
-          </div>
-          <p className="text-sm text-[#8EA399] mt-1">
-            Track shared group expenses, split bills equally, and manage individual participant balances.
-          </p>
-        </div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto' }}>
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#0A1612] border border-[#1C3930] rounded-xl p-5 shadow-lg">
-          <div className="flex items-center justify-between text-[#8EA399] text-xs font-medium mb-2">
+      {/* Overview Stat Cards (Forced Side-by-Side via Inline Flexbox) */}
+      <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+        <div style={{ flex: 1, backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Others owe you</span>
-            <Users size={16} className="text-[#10B981]" />
+            <Users size={16} style={{ color: '#10B981' }} />
           </div>
-          <div className="text-2xl font-bold text-[#F0FDF4]">₹{othersOweYou.toLocaleString()}</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>₹{othersOweYou.toLocaleString()}</div>
         </div>
 
-        <div className="bg-[#0A1612] border border-[#1C3930] rounded-xl p-5 shadow-lg">
-          <div className="flex items-center justify-between text-[#8EA399] text-xs font-medium mb-2">
+        <div style={{ flex: 1, backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>You owe</span>
-            <DollarSign size={16} className="text-[#34D399]" />
+            <DollarSign size={16} style={{ color: '#34D399' }} />
           </div>
-          <div className="text-2xl font-bold text-[#F0FDF4]">₹0</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>₹0</div>
         </div>
 
-        <div className="bg-[#0A1612] border border-[#1C3930] rounded-xl p-5 shadow-lg">
-          <div className="flex items-center justify-between text-[#8EA399] text-xs font-medium mb-2">
+        <div style={{ flex: 1, backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Unsettled Bills</span>
-            <Receipt size={16} className="text-[#10B981]" />
+            <Receipt size={16} style={{ color: '#10B981' }} />
           </div>
-          <div className="text-2xl font-bold text-[#F0FDF4]">{unsettledCount}</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>{unsettledCount}</div>
         </div>
       </div>
 
       {/* Existing Bills List */}
-      <div className="space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {bills.map((bill) => (
-          <div key={bill.id} className="bg-[#0A1612] border border-[#1C3930] rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1C3930]">
+          <div key={bill.id} style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid #1C3930' }}>
               <div>
-                <h3 className="text-lg font-bold text-[#F0FDF4]">{bill.title}</h3>
-                <span className="text-xs text-[#8EA399]">Paid by {bill.paidBy}</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>{bill.title}</h3>
+                <span style={{ fontSize: '12px', color: '#8EA399' }}>Paid by {bill.paidBy}</span>
               </div>
-              <div className="text-lg font-bold text-[#10B981]">₹{bill.total.toLocaleString()}</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#10B981', fontFamily: 'monospace' }}>₹{bill.total.toLocaleString()}</div>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
               {bill.participants.map((p, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between bg-[#050B09] border border-[#1C3930]/60 px-4 py-3 rounded-xl"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#050B09', border: '1px solid rgba(28,57,48,0.6)', padding: '12px 16px', borderRadius: '12px' }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-[#F0FDF4]">{p.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '500', color: '#F0FDF4' }}>{p.name}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`text-xs font-semibold ${p.settled ? 'text-[#10B981] line-through' : 'text-[#34D399]'}`}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', fontFamily: 'monospace', color: p.settled ? '#10B981' : '#34D399', textDecoration: p.settled ? 'line-through' : 'none' }}>
                       {p.settled ? 'Settled' : `Owes ₹${p.share}`}
                     </span>
                     <button
                       onClick={() => toggleSettle(bill.id, idx)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition border ${
-                        p.settled
-                          ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40'
-                          : 'bg-[#1C3930]/40 text-[#8EA399] border-[#1C3930] hover:text-[#F0FDF4]'
-                      }`}
+                      style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        border: p.settled ? '1px solid rgba(16,185,129,0.4)' : '1px solid #1C3930',
+                        backgroundColor: p.settled ? 'rgba(16,185,129,0.2)' : 'rgba(28,57,48,0.4)',
+                        color: p.settled ? '#10B981' : '#8EA399',
+                        transition: 'all 0.2s'
+                      }}
                     >
                       {p.settled ? 'Mark Unpaid' : 'Mark Settled'}
                     </button>
@@ -161,42 +153,42 @@ export default function BillSplittingPage() {
       </div>
 
       {/* Create New Shared Bill Form */}
-      <div className="bg-[#0A1612] border border-[#1C3930] rounded-2xl p-6 shadow-xl">
-        <h3 className="text-base font-bold text-[#F0FDF4] mb-4">New shared bill (equal split)</h3>
-        <form onSubmit={handleAddBill} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', marginBottom: '16px', marginTop: 0 }}>New shared bill (equal split)</h3>
+        <form onSubmit={handleAddBill} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
           <div>
-            <label className="block text-xs font-medium text-[#8EA399] mb-1">Title</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '4px' }}>Title</label>
             <input
               type="text"
               placeholder="e.g. Dinner"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full bg-[#050B09] border border-[#1C3930] rounded-xl px-4 py-2.5 text-xs text-[#F0FDF4] focus:outline-none focus:border-[#10B981]"
+              style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 16px', fontSize: '12px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#8EA399] mb-1">Total (₹)</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '4px' }}>Total (₹)</label>
             <input
               type="number"
               placeholder="0.00"
               value={newTotal}
               onChange={(e) => setNewTotal(e.target.value)}
-              className="w-full bg-[#050B09] border border-[#1C3930] rounded-xl px-4 py-2.5 text-xs text-[#F0FDF4] focus:outline-none focus:border-[#10B981]"
+              style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 16px', fontSize: '12px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#8EA399] mb-1">Participants</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '4px' }}>Participants</label>
             <input
               type="text"
               value={newParticipants}
               onChange={(e) => setNewParticipants(e.target.value)}
-              className="w-full bg-[#050B09] border border-[#1C3930] rounded-xl px-4 py-2.5 text-xs text-[#F0FDF4] focus:outline-none focus:border-[#10B981]"
+              style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 16px', fontSize: '12px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
-          <div className="md:col-span-3 pt-2">
+          <div style={{ gridColumn: 'span 3 / span 3', paddingTop: '8px' }}>
             <button
               type="submit"
-              className="bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-lg shadow-[#10B981]/20 flex items-center gap-2"
+              style={{ backgroundColor: '#10B981', color: '#050B09', fontWeight: 'bold', fontSize: '12px', padding: '10px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
             >
               <Plus size={16} /> Split equally
             </button>

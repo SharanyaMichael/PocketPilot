@@ -2,71 +2,81 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFinance } from '../context/FinanceContext';
 import { formatCountdown } from '../utils/formatters';
-import { Menu, Plus, ShieldAlert, Sparkles, Database } from 'lucide-react';
+import { Plus, ShieldAlert, Database } from 'lucide-react';
 
-export default function Header({ onOpenSidebar, onOpenNewTransaction }) {
-  const { cooldown, settings } = useFinance();
+export default function Header({ onOpenNewTransaction }) {
+  const { cooldown } = useFinance();
   const navigate = useNavigate();
 
   const todayStr = new Date().toLocaleDateString('en-IN', {
     weekday: 'short',
-    month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    month: 'short'
   });
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-[#091510]/85 backdrop-blur-md border-b border-[rgba(110,231,183,0.16)] px-4 sm:px-6 flex items-center justify-between">
-      {/* Left: Mobile menu button & Title / Date */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onOpenSidebar}
-          className="lg:hidden p-2 rounded-xl text-[#A7C4B5] hover:text-[#F0FDF4] hover:bg-[#11251B] transition-colors"
-          aria-label="Toggle navigation menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        <div className="hidden sm:flex flex-col">
-          <span className="text-xs font-semibold text-[#F0FDF4]">Financial Operating System</span>
-          <span className="text-[11px] text-[#A7C4B5]">{todayStr}</span>
-        </div>
+    <header style={{ height: '81px', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', boxSizing: 'border-box' }}>
+      {/* Left: Title & Date */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#F0FDF4', letterSpacing: '-0.01em' }}>Financial Operating System</span>
+        <span style={{ fontSize: '11px', color: '#9CAFA3', marginTop: '2px' }}>{todayStr}</span>
       </div>
 
-      {/* Right: Cooldown Pill, Demo Status, Quick Add Button */}
-      <div className="flex items-center gap-2.5 sm:gap-4">
-        {/* Cooling-off status indicator */}
+      {/* Right: Cooling-Off, Demo Data, and Record Transaction Button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Cooling-off status button */}
         <button
-          onClick={() => navigate('/cooling-off')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-            cooldown.is_active
-              ? 'bg-[#10B981]/15 text-[#6EE7B7] border-[#10B981]/50 emerald-glow-sm animate-pulse'
-              : 'bg-[#11251B]/60 text-[#A7C4B5] border-[rgba(110,231,183,0.16)] hover:text-[#F0FDF4]'
-          }`}
-          title="Global Cooling-Off Mode protects against impulsive purchases"
+          onClick={() => navigate('/dashboard/cooling-off')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            backgroundColor: cooldown.is_active ? 'rgba(16, 185, 129, 0.15)' : '#091510',
+            color: cooldown.is_active ? '#6EE7B7' : '#9CAFA3',
+            border: cooldown.is_active ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid rgba(110, 231, 183, 0.16)',
+            transition: 'all 0.2s ease',
+          }}
         >
-          <ShieldAlert className={`w-3.5 h-3.5 ${cooldown.is_active ? 'text-[#10B981]' : 'text-[#A7C4B5]'}`} />
-          <span className="hidden md:inline">
-            {cooldown.is_active ? 'Cooling-Off:' : 'Cooling-Off'}
-          </span>
-          <span className="font-mono font-bold">
+          <ShieldAlert style={{ width: '16px', height: '16px', color: cooldown.is_active ? '#10B981' : '#9CAFA3', flexShrink: 0 }} />
+          <span>Cooling-Off</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#F0FDF4', marginLeft: '2px' }}>
             {cooldown.is_active ? formatCountdown(cooldown.remaining_seconds) : 'Standby'}
           </span>
         </button>
 
-        {/* Demo Data badge */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#050B09] border border-white/10 text-[11px] text-[#A7C4B5]">
-          <Database className="w-3 h-3 text-[#10B981]" />
+        {/* Demo Data Loaded Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '12px', backgroundColor: '#091510', border: '1px solid rgba(110, 231, 183, 0.16)', fontSize: '12px', color: '#9CAFA3' }}>
+          <Database style={{ width: '16px', height: '16px', color: '#10B981', flexShrink: 0 }} />
           <span>Demo Data Loaded</span>
         </div>
 
-        {/* Quick Add Button */}
+        {/* Record Transaction Button */}
         <button
           onClick={onOpenNewTransaction}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            backgroundColor: '#10B981',
+            color: '#050B09',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+            transition: 'all 0.2s ease',
+            flexShrink: 0,
+          }}
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span className="hidden sm:inline">Record Transaction</span>
-          <span className="sm:hidden">Add</span>
+          <Plus style={{ width: '16px', height: '16px', strokeWidth: 2.5, flexShrink: 0 }} />
+          <span>Record Transaction</span>
         </button>
       </div>
     </header>

@@ -1,159 +1,213 @@
 import React, { useState } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, formatCountdown } from '../utils/formatters';
-import { ShieldAlert, XCircle, Timer, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Snowflake, Clock, AlertTriangle, CheckCircle, X, Wallet } from 'lucide-react';
 
-export default function CoolingOffModal() {
-  const { interceptModal, closeInterceptModal, cooldown, logCooldownAction } = useFinance();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function CoolingOffModal({ isOpen, onClose, mode = 'TIME_WINDOW' }) {
+  // Load saved silent nudge window
+  const [nudgeSettings, setNudgeSettings] = useState(() => {
+    const saved = localStorage.getItem('pocketpilot_nudge_window');
+    return saved ? JSON.parse(saved) : { enabled: false, startTime: '22:00', endTime: '06:00', locked: false };
+  });
 
-  if (!interceptModal.isOpen || !interceptModal.attemptedPurchase) return null;
+  const [tempStart, setTempStart] = useState(nudgeSettings.startTime);
+  const [tempEnd, setTempEnd] = useState(nudgeSettings.endTime);
 
-  const purchase = interceptModal.attemptedPurchase;
+  // Load saved persistent daily budget
+  const [dailyLimit, setDailyLimit] = useState(() => {
+    const saved = localStorage.getItem('pocketpilot_daily_limit');
+    return saved ? JSON.parse(saved) : { amount: '', locked: false };
+  });
+  const [tempLimit, setTempLimit] = useState(dailyLimit.amount);
 
-  // Button 1: Cancel Purchase
-  const handleCancelPurchase = async () => {
-    setIsSubmitting(true);
-    await logCooldownAction('cancelled', purchase, 'User decided to cancel purchase during cooling-off interception');
-    if (interceptModal.onSuccessCallback) {
-      interceptModal.onSuccessCallback(false, false);
-    }
-    setIsSubmitting(false);
-    closeInterceptModal();
+  if (!isOpen) return null;
+
+  const handleLockWindow = (e) => {
+    e.preventDefault();
+    const updated = { enabled: true, startTime: tempStart, endTime: tempEnd, locked: true };
+    setNudgeSettings(updated);
+    localStorage.setItem('pocketpilot_nudge_window', JSON.stringify(updated));
   };
 
-  // Button 2: Continue Cooldown
-  const handleContinueCooldown = async () => {
-    setIsSubmitting(true);
-    await logCooldownAction('continued', purchase, 'User paused and elected to wait out the remainder of cooling-off timer');
-    if (interceptModal.onSuccessCallback) {
-      interceptModal.onSuccessCallback(false, false);
-    }
-    setIsSubmitting(false);
-    closeInterceptModal();
-  };
-
-  // Button 3: Yes, I Want to Spend
-  const handleYesSpend = async () => {
-    setIsSubmitting(true);
-    await logCooldownAction('overrode', purchase, 'User overrode the active cooling-off timer and confirmed expense');
-    if (interceptModal.onSuccessCallback) {
-      await interceptModal.onSuccessCallback(true, true);
-    }
-    setIsSubmitting(false);
-    closeInterceptModal();
+  const handleSaveDailyLimit = (e) => {
+    e.preventDefault();
+    if (!tempLimit) return;
+    const updated = { amount: tempLimit, locked: true };
+    setDailyLimit(updated);
+    localStorage.setItem('pocketpilot_daily_limit', JSON.stringify(updated));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-[#0D1D16] border border-[#10B981]/30 rounded-2xl p-6 sm:p-8 shadow-2xl emerald-glow text-[#F0FDF4]">
-        
-        {/* Header with shield icon */}
-        <div className="flex items-start gap-4 mb-5">
-          <div className="p-3.5 rounded-xl bg-[#11251B] border border-[#10B981]/40 text-[#6EE7B7] flex-shrink-0">
-            <ShieldAlert className="w-8 h-8 text-[#10B981]" />
-          </div>
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FBBF24]/10 text-[#FBBF24] border border-[#FBBF24]/30 mb-1">
-              <Timer className="w-3.5 h-3.5" />
-              Cooling-Off Mode Active
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-[#07130E] border border-[#1C3930] rounded-2xl w-full max-w-lg p-6 text-[#F0FDF4] shadow-2xl relative space-y-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#1C3930] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-[#10B981]">
+              {mode === 'DAILY_BUDGET' ? <Wallet className="w-5 h-5" /> : <Snowflake className="w-5 h-5" />}
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-[#F0FDF4]">
-              Pause & Reflect Before Spending
-            </h2>
-            <p className="text-sm text-[#A7C4B5] mt-0.5">
-              PocketPilot intercepted this expense to protect you from impulsive purchases.
+            <div>
+              <h2 className="text-lg font-bold">
+                {mode === 'DAILY_BUDGET' ? 'Daily Budget Guardrail' : 'Cooling-Off Guardrails'}
+              </h2>
+              <p className="text-xs text-[#9CAFA3]">
+                {mode === 'DAILY_BUDGET' ? 'Configure your permanent daily spend limit.' : 'Configure impulsive spending protection windows.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-white hover:bg-[#122A22]"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content based on Mode */}
+        {mode === 'DAILY_BUDGET' ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2.5">
+              <Wallet className="w-4 h-4 text-[#10B981]" />
+              <h3 className="text-sm font-semibold">Automated Daily Spend Limit</h3>
+            </div>
+            <p className="text-xs text-[#9CAFA3]">
+              Set your maximum daily budget. Once configured, it will apply automatically every single day until you manually modify or reset it.
             </p>
-          </div>
-        </div>
 
-        {/* Live Timer Pill */}
-        <div className="flex items-center justify-between p-3 rounded-xl bg-[#11251B]/80 border border-[#10B981]/20 mb-5">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]"></span>
-            </span>
-            <span className="text-xs uppercase tracking-wider text-[#A7C4B5] font-semibold">Time Remaining:</span>
-          </div>
-          <span className="font-mono text-lg font-bold text-[#6EE7B7] tracking-wider">
-            {formatCountdown(cooldown.remaining_seconds)}
-          </span>
-        </div>
-
-        {/* Attempted Purchase Details */}
-        <div className="p-4 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] mb-6">
-          <div className="text-xs text-[#A7C4B5] uppercase font-semibold mb-2">Attempted Outflow</div>
-          <div className="flex justify-between items-baseline mb-2">
-            <span className="text-lg font-semibold text-[#F0FDF4] truncate pr-2">
-              {purchase.description || 'Discretionary Purchase'}
-            </span>
-            <span className="text-2xl font-black text-[#FB7185] font-mono">
-              {formatCurrency(purchase.amount)}
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-[#A7C4B5]">
-            <span>Category: <strong className="text-[#6EE7B7]">{purchase.category || 'Shopping'}</strong></span>
-            <span>Date: <strong className="text-[#F0FDF4]">{purchase.date}</strong></span>
-          </div>
-        </div>
-
-        {/* Honest Disclaimer */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-[#050B09] border border-white/5 text-[11px] text-[#A7C4B5]/80 mb-6">
-          <AlertTriangle className="w-4 h-4 text-[#FBBF24] flex-shrink-0 mt-0.5" />
-          <span>
-            <strong>Disclaimer:</strong> PocketPilot intercepts expenses recorded inside this application. It cannot physically block external bank apps, UPI handles, or debit/credit card POS terminals without authorized banking integrations.
-          </span>
-        </div>
-
-        {/* 3 Explicit Action Buttons */}
-        <div className="space-y-3">
-          {/* Action 1: Cancel Purchase */}
-          <button
-            onClick={handleCancelPurchase}
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#10B981]/20 hover:bg-[#10B981]/30 border border-[#10B981]/50 text-[#6EE7B7] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <XCircle className="w-5 h-5 text-[#34D399]" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">1. Cancel Purchase</div>
-                <div className="text-[11px] text-[#A7C4B5] font-normal">Save money, discard this expense, and log as impulse prevented</div>
+            {dailyLimit.locked ? (
+              <div className="bg-[#050B09] border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-[#F0FDF4]">
+                      Active Daily Limit: <span className="text-[#10B981]">₹ {dailyLimit.amount}</span> / day
+                    </p>
+                    <p className="text-[11px] text-[#9CAFA3]">Permanent daily budget active.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const reset = { amount: '', locked: false };
+                    setDailyLimit(reset);
+                    setTempLimit('');
+                    localStorage.removeItem('pocketpilot_daily_limit');
+                  }}
+                  className="text-[11px] text-red-400 hover:underline shrink-0"
+                >
+                  Change
+                </button>
               </div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-[#6EE7B7]" />
-          </button>
+            ) : (
+              <form onSubmit={handleSaveDailyLimit} className="bg-[#050B09] border border-[#1C3930] p-4 rounded-xl space-y-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#9CAFA3] mb-1">Enter Daily Budget (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 2000"
+                    value={tempLimit}
+                    onChange={(e) => setTempLimit(e.target.value)}
+                    className="w-full bg-[#091510] border border-[#1C3930] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#10B981]"
+                    required
+                  />
+                </div>
 
-          {/* Action 2: Continue Cooldown */}
-          <button
-            onClick={handleContinueCooldown}
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#11251B] hover:bg-[#163023] border border-[rgba(110,231,183,0.2)] text-[#F0FDF4] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <Timer className="w-5 h-5 text-[#FBBF24]" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">2. Continue Cooldown</div>
-                <div className="text-[11px] text-[#A7C4B5] font-normal">Step away and rethink without recording the expense yet</div>
-              </div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-[#A7C4B5]" />
-          </button>
+                <p className="text-[10px] text-amber-400/90 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  Applies daily until you manually change it.
+                </p>
 
-          {/* Action 3: Yes, I Want to Spend */}
-          <button
-            onClick={handleYesSpend}
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#091510] hover:bg-[#FB7185]/10 border border-[#FB7185]/30 text-[#FB7185] font-medium transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-          >
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-[#10B981] hover:bg-emerald-600 text-[#050B09] font-bold text-xs transition-all"
+                  >
+                    Save Daily Budget
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-[#FB7185]" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">3. Yes, I Want to Spend</div>
-                <div className="text-[11px] text-[#A7C4B5] font-normal">I have carefully evaluated this and choose to override cooldown</div>
-              </div>
+              <Clock className="w-4 h-4 text-[#10B981]" />
+              <h3 className="text-sm font-semibold">Vulnerable Time Window Nudge</h3>
             </div>
-            <ArrowRight className="w-4 h-4 text-[#FB7185]" />
+            <p className="text-xs text-[#9CAFA3]">
+              Set a one-time mindful window. Transactions attempted during this period will trigger a gentle YouTube/Instagram-style confirmation nudge.
+            </p>
+
+            {nudgeSettings.locked ? (
+              <div className="bg-[#050B09] border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-[#F0FDF4]">
+                      Window Locked: <span className="text-[#10B981]">{nudgeSettings.startTime} to {nudgeSettings.endTime}</span>
+                    </p>
+                    <p className="text-[11px] text-[#9CAFA3]">Silent mindfulness nudge is active.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const reset = { enabled: false, startTime: '22:00', endTime: '06:00', locked: false };
+                    setNudgeSettings(reset);
+                    localStorage.setItem('pocketpilot_nudge_window', JSON.stringify(reset));
+                  }}
+                  className="text-[11px] text-red-400 hover:underline shrink-0"
+                >
+                  Reset
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleLockWindow} className="bg-[#050B09] border border-[#1C3930] p-4 rounded-xl space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#9CAFA3] mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      value={tempStart}
+                      onChange={(e) => setTempStart(e.target.value)}
+                      className="w-full bg-[#091510] border border-[#1C3930] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#10B981]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#9CAFA3] mb-1">End Time</label>
+                    <input
+                      type="time"
+                      value={tempEnd}
+                      onChange={(e) => setTempEnd(e.target.value)}
+                      className="w-full bg-[#091510] border border-[#1C3930] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#10B981]"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-amber-400/90 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  Can be configured once to prevent impulsive edits.
+                </p>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-[#10B981] hover:bg-emerald-600 text-[#050B09] font-bold text-xs transition-all"
+                  >
+                    Lock Time Window
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* Footer Close */}
+        <div className="flex justify-end pt-2 border-t border-[#1C3930]">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-[#122A22] hover:bg-[#1C3930] text-xs font-semibold transition-all"
+          >
+            Close
           </button>
         </div>
 

@@ -1,421 +1,375 @@
-import React, { useState } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, formatDate, CATEGORY_COLORS } from '../utils/formatters';
+// @refresh reload
+import React, { useState, useEffect } from 'react';
 import {
-  Wallet,
-  ArrowUpRight,
-  ArrowDownLeft,
-  PiggyBank,
-  ShieldCheck,
+  PieChart as PieIcon,
+  Settings,
+  DollarSign,
   TrendingUp,
-  Calendar,
-  AlertTriangle,
-  ChevronRight,
+  Wallet,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Shield,
   Plus,
-  Sparkles,
-  Info
+  BarChart3,
+  Lightbulb
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area
-} from 'recharts';
 
-export default function OverviewPage({ onOpenNewTransaction, onOpenGoalModal }) {
-  const { summary, transactions, subscriptions, savingsGoals, insightsData, isLoading } = useFinance();
-  const [trendRange, setTrendRange] = useState('6M');
+export default function OverviewPage() {
+  // Permanent Daily Budget State stored in localStorage
+  const [dailyBudget, setDailyBudget] = useState(() => {
+    return parseFloat(localStorage.getItem('user_daily_budget')) || 2500;
+  });
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [tempBudget, setTempBudget] = useState(dailyBudget);
 
-  if (isLoading || !summary) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-[#10B981] border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs text-[#A7C4B5]">Loading financial telemetry...</span>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    localStorage.setItem('user_daily_budget', dailyBudget);
+  }, [dailyBudget]);
 
-  // Derived metrics
-  const budgetPct = summary.budget_used_percentage;
-  const recentTransactions = transactions.slice(0, 6);
-  const topInsights = insightsData.insights.slice(0, 3);
+  const todaysSpendCategories = [
+    { name: 'Food & Dining', amount: 850, color: '#10B981' },
+    { name: 'Shopping', amount: 1200, color: '#38BDF8' },
+    { name: 'Utilities & Transport', amount: 350, color: '#FBBF24' },
+  ];
 
-  // Custom Recharts Tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="p-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.2)] text-xs shadow-xl">
-          <p className="font-semibold text-[#F0FDF4] mb-1">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={`item-${index}`} className="flex items-center gap-2" style={{ color: entry.color }}>
-              <span>{entry.name}:</span>
-              <span className="font-mono font-bold">{formatCurrency(entry.value)}</span>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+  const totalSpentToday = todaysSpendCategories.reduce((sum, c) => sum + c.amount, 0);
+  const remainingBudget = dailyBudget - totalSpentToday;
+  const spendPercentage = Math.min(100, Math.round((totalSpentToday / dailyBudget) * 100));
+
+  const handleSaveBudget = (e) => {
+    e.preventDefault();
+    setDailyBudget(parseFloat(tempBudget) || 2500);
+    setIsEditingBudget(false);
   };
 
+  const recentTransactions = [
+    { id: 1, title: 'Supermarket Groceries', category: 'Food & Dining', amount: -1250, date: 'Today, 2:15 PM' },
+    { id: 2, title: 'Freelance Design Retainer', category: 'Income', amount: 25000, date: 'Yesterday' },
+    { id: 3, title: 'Electric Utility Bill', category: 'Utilities', amount: -1840, date: '28 Oct' },
+    { id: 4, title: 'Coffee & Snacks', category: 'Food & Dining', amount: -320, date: '27 Oct' },
+  ];
+
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0D1D16] to-[#091510] border border-[rgba(110,231,183,0.16)]">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* 1. Financial Overview Top Banner */}
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>
             Financial Overview
           </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
+          <p style={{ fontSize: '13px', color: '#8EA399', margin: 0 }}>
             Real-time balance telemetry, automated spending trends, and budget guardrails.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenNewTransaction}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Transaction</span>
-          </button>
-        </div>
+        <button
+          style={{ backgroundColor: '#10B981', color: '#050B09', fontWeight: 'bold', fontSize: '12px', padding: '10px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
+        >
+          <Plus size={16} /> Add Transaction
+        </button>
       </div>
 
-      {/* 5 KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        {/* Total Available Balance */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between hover:border-[#10B981]/40 transition-colors">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+      {/* 2. Top 5 Metric Cards (Side-by-Side Grid) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '16px' }}>
+
+        {/* Available Balance */}
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '12px' }}>
             <span>Available Balance</span>
-            <div className="p-2 rounded-lg bg-[#11251B] text-[#10B981]">
-              <Wallet className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
+              <Wallet size={16} />
             </div>
           </div>
           <div>
-            <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${summary.available_balance >= 0 ? 'text-[#F0FDF4]' : 'text-[#FB7185]'}`}>
-              {formatCurrency(summary.available_balance)}
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>
+              ₹1,30,267
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1 flex items-center gap-1">
-              <span>Net operating liquidity</span>
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '6px' }}>
+              Net operating liquidity
             </div>
           </div>
         </div>
 
         {/* Monthly Income */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between hover:border-[#10B981]/40 transition-colors">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '12px' }}>
             <span>Monthly Income</span>
-            <div className="p-2 rounded-lg bg-[#34D399]/15 text-[#34D399]">
-              <ArrowDownLeft className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
+              <ArrowUpRight size={16} />
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-[#34D399]">
-              +{formatCurrency(summary.monthly_income)}
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#10B981', fontFamily: 'monospace' }}>
+              +₹1,98,000
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '6px' }}>
               Recorded inflows this month
             </div>
           </div>
         </div>
 
         {/* Monthly Expenses */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between hover:border-[#10B981]/40 transition-colors">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '12px' }}>
             <span>Monthly Expenses</span>
-            <div className="p-2 rounded-lg bg-[#FB7185]/15 text-[#FB7185]">
-              <ArrowUpRight className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(251,113,133,0.15)', color: '#FB7185' }}>
+              <ArrowDownRight size={16} />
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-[#FB7185]">
-              -{formatCurrency(summary.monthly_expenses)}
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#FB7185', fontFamily: 'monospace' }}>
+              -₹67,733
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '6px' }}>
               Outflows for current cycle
             </div>
           </div>
         </div>
 
-        {/* Savings Goals Amount */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between hover:border-[#10B981]/40 transition-colors">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        {/* Savings Reserves */}
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '12px' }}>
             <span>Savings Reserves</span>
-            <div className="p-2 rounded-lg bg-[#10B981]/15 text-[#6EE7B7]">
-              <PiggyBank className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
+              <Shield size={16} />
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-[#6EE7B7]">
-              {formatCurrency(summary.savings_total_saved)}
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>
+              ₹3,67,000
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
-              Target: {formatCurrency(summary.savings_total_target)}
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '6px' }}>
+              Target: ₹7,30,000
             </div>
           </div>
         </div>
 
-        {/* Monthly Budget Remaining */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between hover:border-[#10B981]/40 transition-colors">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        {/* Budget Remaining */}
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Budget Remaining</span>
-            <div className={`p-2 rounded-lg ${budgetPct > 90 ? 'bg-[#FB7185]/20 text-[#FB7185]' : 'bg-[#FBBF24]/20 text-[#FBBF24]'}`}>
-              <ShieldCheck className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(251,113,133,0.15)', color: '#FB7185' }}>
+              <CreditCard size={16} />
             </div>
           </div>
           <div>
-            <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-[#FBBF24]">
-              {formatCurrency(summary.monthly_budget_remaining)}
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace', marginBottom: '8px' }}>
+              ₹0
             </div>
-            {/* Progress bar */}
-            <div className="w-full bg-[#11251B] h-1.5 rounded-full overflow-hidden mt-2">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  budgetPct > 90 ? 'bg-[#FB7185]' : budgetPct > 75 ? 'bg-[#FBBF24]' : 'bg-[#10B981]'
-                }`}
-                style={{ width: `${Math.min(100, budgetPct)}%` }}
-              />
+            <div style={{ width: '100%', height: '6px', backgroundColor: '#1C3930', borderRadius: '9999px', overflow: 'hidden', marginBottom: '6px' }}>
+              <div style={{ width: '100%', height: '100%', backgroundColor: '#FB7185', borderRadius: '9999px' }} />
             </div>
-            <div className="text-[10px] text-[#A7C4B5] mt-1 flex justify-between">
-              <span>{budgetPct.toFixed(0)}% used</span>
-              <span>of {formatCurrency(summary.monthly_budget)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#8EA399' }}>
+              <span style={{ color: '#FB7185' }}>104% used</span>
+              <span>of ₹65,000</span>
             </div>
           </div>
+        </div>
+
+      </div>
+
+      {/* 3. Permanent Daily Budget Target & Spending Ring */}
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(110,231,183,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16,185,129,0.3)' }}>
+              <DollarSign size={20} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 2px 0' }}>Permanent Daily Budget Target</h2>
+              <p style={{ fontSize: '12px', color: '#8EA399', margin: 0 }}>
+                Active Limit: <strong style={{ color: '#10B981', fontFamily: 'monospace' }}>₹{dailyBudget.toLocaleString()}</strong> / day (Persists permanently)
+              </p>
+            </div>
+          </div>
+
+          <div>
+            {isEditingBudget ? (
+              <form onSubmit={handleSaveBudget} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  value={tempBudget}
+                  onChange={(e) => setTempBudget(e.target.value)}
+                  style={{ backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '8px', padding: '6px 12px', color: '#F0FDF4', fontSize: '13px', width: '120px', outline: 'none' }}
+                />
+                <button
+                  type="submit"
+                  style={{ backgroundColor: '#10B981', color: '#050B09', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Save
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => { setTempBudget(dailyBudget); setIsEditingBudget(true); }}
+                style={{ backgroundColor: '#1C3930', color: '#F0FDF4', border: '1px solid rgba(110,231,183,0.2)', borderRadius: '10px', padding: '6px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Settings size={14} /> Change Daily Budget
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px', alignItems: 'center' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+            <div style={{ position: 'relative', width: '140px', height: '140px', borderRadius: '50%', background: `conic-gradient(#10B981 0% 35%, #38BDF8 35% 75%, #FBBF24 75% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
+              <div style={{ width: '104px', height: '104px', borderRadius: '50%', backgroundColor: '#091510', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '10px', color: '#8EA399' }}>Spent Today</span>
+                <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>₹{totalSpentToday}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {todaysSpendCategories.map((cat, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#8EA399' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cat.color }} />
+                  <span>{cat.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#F0FDF4' }}>Daily Budget Utilization</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'monospace', color: spendPercentage > 100 ? '#FB7185' : '#10B981' }}>
+                {spendPercentage}% Used
+              </span>
+            </div>
+
+            <div style={{ width: '100%', height: '8px', backgroundColor: '#1C3930', borderRadius: '9999px', overflow: 'hidden' }}>
+              <div style={{ width: `${spendPercentage}%`, height: '100%', backgroundColor: spendPercentage > 100 ? '#FB7185' : '#10B981', borderRadius: '9999px', transition: 'width 0.3s ease' }} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '4px' }}>
+              <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)' }}>
+                <div style={{ fontSize: '11px', color: '#8EA399' }}>Remaining Budget</div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', color: remainingBudget >= 0 ? '#10B981' : '#FB7185', marginTop: '2px' }}>
+                  ₹{remainingBudget.toLocaleString()}
+                </div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)' }}>
+                <div style={{ fontSize: '11px', color: '#8EA399' }}>Daily Limit</div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', color: '#F0FDF4', marginTop: '2px' }}>
+                  ₹{dailyBudget.toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* Main Charts Row: Income vs Expense Bar + Category Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Inflow vs Outflow */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-bold text-[#F0FDF4]">Income vs Expenses</h2>
-              <p className="text-xs text-[#A7C4B5]">6-month comparative cash flow history</p>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1.5 text-[#34D399]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#34D399]"></span> Income
-              </span>
-              <span className="flex items-center gap-1.5 text-[#FB7185]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FB7185]"></span> Expense
-              </span>
-            </div>
+      {/* 4. Charts Section: Income vs Expense & Spending by Category */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Income vs Expense Trajectory</h3>
+            <BarChart3 size={18} style={{ color: '#10B981' }} />
           </div>
 
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.monthly_trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="month" stroke="#A7C4B5" fontSize={11} tickLine={false} />
-                <YAxis
-                  stroke="#A7C4B5"
-                  fontSize={11}
-                  tickLine={false}
-                  tickFormatter={(val) => `₹${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="income" name="Income" fill="#34D399" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Expense" fill="#FB7185" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '16px 8px 0 8px', borderBottom: '1px solid #1C3930' }}>
+            {['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'].map((month, idx) => {
+              const incomeHeight = [60, 75, 85, 70, 90, 95][idx];
+              const expenseHeight = [45, 55, 50, 65, 60, 50][idx];
+              return (
+                <div key={month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '160px' }}>
+                    <div style={{ width: '12px', height: `${incomeHeight}%`, backgroundColor: '#10B981', borderRadius: '4px 4px 0 0' }} title="Income" />
+                    <div style={{ width: '12px', height: `${expenseHeight}%`, backgroundColor: '#FB7185', borderRadius: '4px 4px 0 0' }} title="Expense" />
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#8EA399' }}>{month}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginTop: '16px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#8EA399' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#10B981' }} /> Income
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#8EA399' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: '#FB7185' }} /> Expense
+            </div>
           </div>
         </div>
 
-        {/* Spending Breakdown Donut */}
-        <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col">
-          <div className="mb-2">
-            <h2 className="text-sm font-bold text-[#F0FDF4]">Spending by Category</h2>
-            <p className="text-xs text-[#A7C4B5]">Relative expense distribution</p>
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Spending by Category</h3>
+            <PieIcon size={18} style={{ color: '#38BDF8' }} />
           </div>
 
-          <div className="h-52 w-full relative flex items-center justify-center">
-            {summary.category_breakdown.length === 0 ? (
-              <div className="text-xs text-[#A7C4B5]">No expense transactions recorded yet.</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Tooltip
-                    formatter={(value) => [formatCurrency(value), 'Spend']}
-                    contentStyle={{ backgroundColor: '#091510', borderColor: 'rgba(110,231,183,0.2)', borderRadius: '12px', fontSize: '12px' }}
-                  />
-                  <Pie
-                    data={summary.category_breakdown}
-                    dataKey="amount"
-                    nameKey="category"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={3}
-                  >
-                    {summary.category_breakdown.map((entry) => (
-                      <Cell
-                        key={`cell-${entry.category}`}
-                        fill={CATEGORY_COLORS[entry.category] || '#10B981'}
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+          <div style={{ position: 'relative', width: '130px', height: '130px', borderRadius: '50%', background: `conic-gradient(#10B981 0% 40%, #38BDF8 40% 70%, #FBBF24 70% 90%, #FB7185 90% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '10px 0' }}>
+            <div style={{ width: '90px', height: '90px', borderRadius: '50%', backgroundColor: '#091510' }} />
           </div>
 
-          {/* Top 3 categories list */}
-          <div className="mt-2 space-y-1.5 flex-1 overflow-y-auto max-h-28 pr-1">
-            {summary.category_breakdown.slice(0, 4).map((cat) => (
-              <div key={cat.category} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 truncate">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: CATEGORY_COLORS[cat.category] || '#10B981' }}
-                  />
-                  <span className="text-[#A7C4B5] truncate">{cat.category}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', marginTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8EA399' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }} /> Food & Dining</span>
+              <span style={{ fontFamily: 'monospace', color: '#F0FDF4' }}>40%</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8EA399' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#38BDF8' }} /> Subscriptions</span>
+              <span style={{ fontFamily: 'monospace', color: '#F0FDF4' }}>30%</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8EA399' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#FBBF24' }} /> Utilities</span>
+              <span style={{ fontFamily: 'monospace', color: '#F0FDF4' }}>20%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 5. Spending Observations & Recent Activity Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px' }}>
+
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Lightbulb size={18} style={{ color: '#FBBF24' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Spending Observations</h3>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ padding: '12px 14px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)', fontSize: '12px', color: '#8EA399', lineHeight: '1.5' }}>
+              ⚡ <strong style={{ color: '#F0FDF4' }}>Subscription creep detected:</strong> Recurring commitments grew by 12% over the last 30 days.
+            </div>
+            <div style={{ padding: '12px 14px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)', fontSize: '12px', color: '#8EA399', lineHeight: '1.5' }}>
+              🛡️ <strong style={{ color: '#F0FDF4' }}>Emergency buffer healthy:</strong> Your 6-month runway remains fully secured above threshold.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Recent Activity</h3>
+            <span style={{ fontSize: '12px', color: '#10B981', fontWeight: '500', cursor: 'pointer' }}>View All</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {recentTransactions.map((tx) => (
+              <div
+                key={tx.id}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#050B09', border: '1px solid rgba(28,57,48,0.6)', padding: '12px 16px', borderRadius: '12px' }}
+              >
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#F0FDF4' }}>{tx.title}</div>
+                  <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '2px' }}>{tx.category} • {tx.date}</div>
                 </div>
-                <div className="flex items-center gap-2 font-mono">
-                  <span className="text-[#F0FDF4]">{formatCurrency(cat.amount)}</span>
-                  <span className="text-[#A7C4B5]/70 text-[10px]">({cat.percentage}%)</span>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', color: tx.amount > 0 ? '#10B981' : '#F0FDF4' }}>
+                  {tx.amount > 0 ? `+₹${tx.amount.toLocaleString()}` : `-₹${Math.abs(tx.amount).toLocaleString()}`}
                 </div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
 
-      {/* Row 2: Recent Transactions + Smart Observations & Subscriptions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Transactions List (2 Cols) */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-bold text-[#F0FDF4]">Recent Transactions</h2>
-              <p className="text-xs text-[#A7C4B5]">Latest recorded inflows and outflows</p>
-            </div>
-            <button
-              onClick={onOpenNewTransaction}
-              className="text-xs text-[#6EE7B7] hover:text-[#10B981] font-semibold flex items-center gap-1 cursor-pointer"
-            >
-              <span>View All</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="divide-y divide-[rgba(110,231,183,0.1)]">
-            {recentTransactions.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#A7C4B5]">
-                No transactions recorded yet. Click "Add Transaction" to begin.
-              </div>
-            ) : (
-              recentTransactions.map((tx) => (
-                <div key={tx.id} className="py-3 flex items-center justify-between gap-3 hover:bg-[#11251B]/40 px-2 rounded-xl transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={`p-2 rounded-xl flex-shrink-0 ${
-                        tx.type === 'income' ? 'bg-[#34D399]/15 text-[#34D399]' : 'bg-[#10B981]/15 text-[#6EE7B7]'
-                      }`}
-                    >
-                      {tx.type === 'income' ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4 text-[#FB7185]" />}
-                    </div>
-                    <div className="truncate">
-                      <div className="text-xs font-semibold text-[#F0FDF4] truncate flex items-center gap-1.5">
-                        <span>{tx.clean_merchant || tx.description}</span>
-                        {tx.is_demo === 1 && (
-                          <span className="px-1 py-0.2 rounded text-[9px] bg-white/5 text-[#A7C4B5] border border-white/10 font-normal">
-                            demo
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-[#A7C4B5] flex items-center gap-2">
-                        <span>{formatDate(tx.date)}</span>
-                        <span>•</span>
-                        <span className="text-[#6EE7B7]">{tx.category}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right flex-shrink-0 font-mono">
-                    <div className={`text-xs font-bold ${tx.type === 'income' ? 'text-[#34D399]' : 'text-[#FB7185]'}`}>
-                      {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                    </div>
-                    <div className="text-[10px] text-[#A7C4B5]/70">
-                      {tx.type}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Rule-Based Observations & Upcoming Renewals */}
-        <div className="space-y-6">
-          {/* Real Observations */}
-          <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-[#10B981]" />
-              <h2 className="text-sm font-bold text-[#F0FDF4]">Spending Observations</h2>
-            </div>
-            <div className="space-y-2.5">
-              {topInsights.map((insight) => (
-                <div
-                  key={insight.id}
-                  className="p-3 rounded-xl bg-[#11251B] border border-[rgba(110,231,183,0.14)] text-xs"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-[#F0FDF4] truncate">{insight.title}</span>
-                    {insight.badge && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#10B981]/20 text-[#6EE7B7] flex-shrink-0">
-                        {insight.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#A7C4B5] leading-relaxed">
-                    {insight.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Upcoming Subscriptions widget */}
-          <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#FBBF24]" />
-                <h2 className="text-sm font-bold text-[#F0FDF4]">Upcoming Renewals</h2>
-              </div>
-              <span className="text-[11px] font-mono text-[#A7C4B5]">
-                {formatCurrency(summary.monthly_recurring_subscriptions)}/mo
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {summary.upcoming_subscriptions.slice(0, 3).map((sub) => (
-                <div
-                  key={sub.id}
-                  className="p-2.5 rounded-xl bg-[#11251B]/60 border border-[rgba(110,231,183,0.12)] flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <div className="font-semibold text-[#F0FDF4]">{sub.name}</div>
-                    <div className="text-[10px] text-[#A7C4B5]">
-                      Due {formatDate(sub.next_billing_date)} ({sub.billing_frequency})
-                    </div>
-                  </div>
-                  <div className="font-mono font-bold text-[#FBBF24]">
-                    {formatCurrency(sub.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

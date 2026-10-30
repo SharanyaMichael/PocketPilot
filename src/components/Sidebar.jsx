@@ -1,98 +1,152 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Receipt, 
-  BarChart3, 
-  CreditCard, 
-  Target, 
-  Calculator, 
-  Clock, 
-  Settings, 
-  Users, 
-  X 
+import {
+  LayoutDashboard,
+  Receipt,
+  TrendingUp,
+  Split,
+  CreditCard,
+  Target,
+  ShieldCheck,
+  Snowflake,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Wallet
 } from 'lucide-react';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const navItems = [
-    { path: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-    { path: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-    { path: '/dashboard/insights', label: 'Spending Insights', icon: BarChart3 },
-    { path: '/dashboard/bills', label: 'Bill Splitting', icon: Users },
-    { path: '/dashboard/subscriptions', label: 'Subscriptions', icon: CreditCard },
-    { path: '/dashboard/savings-goals', label: 'Savings Goals', icon: Target },
-    { path: '/dashboard/affordability', label: 'Affordability Checker', icon: Calculator },
-    { path: '/dashboard/cooling-off', label: 'Cooling-Off Mode', icon: Clock },
-    { path: '/dashboard/settings', label: 'Settings', icon: Settings },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
+    { to: '/dashboard/transactions', icon: Receipt, label: 'Transactions' },
+    { to: '/dashboard/insights', icon: TrendingUp, label: 'Spending Insights' },
+    { to: '/dashboard/bills', icon: Split, label: 'Bill Splitting' },
+    { to: '/dashboard/subscriptions', icon: CreditCard, label: 'Subscriptions' },
+    { to: '/dashboard/savings-goals', icon: Target, label: 'Savings Goals' },
+    { to: '/dashboard/affordability', icon: ShieldCheck, label: 'Affordability Checker' },
+    { to: '/dashboard/cooling-off', icon: Snowflake, label: 'Cooling-Off Mode' },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
     <>
+      {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
-          onClick={onClose} 
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 40,
+          }}
         />
       )}
 
-      <aside className={`
-        fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#050B09] border-r border-[#1C3930] p-4 flex flex-col justify-between
-        transform transition-transform duration-300 ease-in-out lg:translate-x-0
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <div className="space-y-6">
-          {/* Header / Brand */}
-          <div className="flex items-center justify-between px-2 pt-2">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-[#10B981]">
-                <LayoutDashboard size={18} />
+      {/* Sidebar Container */}
+      <aside
+        style={{
+          width: isCollapsed ? '80px' : '280px',
+          minWidth: isCollapsed ? '80px' : '280px',
+          position: 'fixed',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#050B09',
+          borderRight: '1px solid rgba(110, 231, 183, 0.12)',
+          color: '#F0FDF4',
+          transition: 'width 0.3s ease',
+        }}
+      >
+        {/* Brand Header */}
+        <div style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(110, 231, 183, 0.08)', flexShrink: 0, height: '81px', boxSizing: 'border-box' }}>
+          {!isCollapsed ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050B09', flexShrink: 0 }}>
+                  <Wallet style={{ width: '20px', height: '20px', strokeWidth: 2.5 }} />
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <h1 style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 900, fontSize: '15px', color: '#F0FDF4', margin: 0, lineHeight: 1, whiteSpace: 'nowrap' }}>
+                    PocketPilot
+                  </h1>
+                  <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: '9px', color: '#A7C4B5', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '4px 0 0 0', whiteSpace: 'nowrap' }}>
+                    PERSONAL FINANCE MANAGER
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-base text-[#F0FDF4] leading-none">PocketPilot</h2>
-                <span className="text-[10px] uppercase tracking-wider text-[#71877D] font-medium">
-                  Personal Finance Manager
-                </span>
-              </div>
+
+              {/* Collapse Button */}
+              <button
+                onClick={onToggleCollapse}
+                style={{ background: 'transparent', border: '1px solid rgba(110, 231, 183, 0.15)', borderRadius: '8px', padding: '6px', color: '#A7C4B5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                title="Collapse sidebar"
+              >
+                <ChevronLeft style={{ width: '16px', height: '16px' }} />
+              </button>
             </div>
-            <button onClick={onClose} className="lg:hidden text-[#71877D] hover:text-[#F0FDF4]">
-              <X size={20} />
-            </button>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050B09' }}>
+                <Wallet style={{ width: '20px', height: '20px', strokeWidth: 2.5 }} />
+              </div>
+              <button
+                onClick={onToggleCollapse}
+                style={{ position: 'absolute', right: '-4px', top: '-10px', background: '#050B09', border: '1px solid rgba(110, 231, 183, 0.2)', borderRadius: '50%', width: '20px', height: '20px', color: '#A7C4B5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Expand sidebar"
+              >
+                <ChevronRight style={{ width: '12px', height: '12px' }} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation Links */}
+        <nav style={{ flex: 1, padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={onClose}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: isActive ? 'bold' : '600',
+                  textDecoration: 'none',
+                  backgroundColor: isActive ? '#10B981' : 'transparent',
+                  color: isActive ? '#050B09' : '#A7C4B5',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                  justifyContent: isCollapsed ? 'center' : 'flex-start',
+                })}
+              >
+                <Icon style={{ width: '18px', height: '18px', flexShrink: 0 }} />
+                {!isCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Footer Metadata */}
+        {!isCollapsed && (
+          <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(110, 231, 183, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#A7C4B5', flexShrink: 0, backgroundColor: '#050B09' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+              Obsidian + Emerald
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: '10px' }}>v1.0 MVP</span>
           </div>
-
-          {/* Nav Links */}
-          <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.exact}
-                  onClick={onClose}
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition
-                    ${isActive 
-                      ? 'bg-[#10B981]/15 text-[#6EE7B7] border border-[#10B981]/30' 
-                      : 'text-[#A7BDB2] hover:bg-[#102820] hover:text-[#F0FDF4]'
-                    }
-                  `}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Footer */}
-        <div className="px-2 pt-4 border-t border-[#1C3930] flex items-center justify-between text-[11px] text-[#71877D]">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            Obsidian + Emerald
-          </span>
-          <span>v1.0 MVP</span>
-        </div>
+        )}
       </aside>
     </>
   );

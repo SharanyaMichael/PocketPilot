@@ -1,275 +1,165 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, formatDate, CATEGORIES, CATEGORY_COLORS } from '../utils/formatters';
+import { formatCurrency, CATEGORY_COLORS } from '../utils/formatters';
 import {
   Search,
-  Filter,
-  Plus,
   ArrowUpRight,
   ArrowDownLeft,
-  Edit2,
   Trash2,
-  Sparkles,
-  Calendar,
-  X,
-  FileText
+  Edit3
 } from 'lucide-react';
 
-export default function TransactionsPage({ onOpenNewTransaction, onEditTransaction }) {
-  const { transactions, deleteTransaction, fetchTransactions } = useFinance();
+export default function TransactionsPage({ onEditTransaction }) {
+  const { transactions, deleteTransaction, isLoading } = useFinance();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedType, setSelectedType] = useState('All');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '40px', height: '40px', border: '2px solid #10B981', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <span style={{ fontSize: '12px', color: '#A7C4B5' }}>Loading transactions ledger...</span>
+        </div>
+      </div>
+    );
+  }
 
-  // Client-side filtering when typing, or trigger fetch
   const filteredTransactions = transactions.filter(tx => {
-    if (selectedCategory !== 'All' && tx.category !== selectedCategory) return false;
-    if (selectedType !== 'All' && tx.type !== selectedType) return false;
-    if (startDate && tx.date < startDate) return false;
-    if (endDate && tx.date > endDate) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      const matchDesc = (tx.description || '').toLowerCase().includes(q);
-      const matchClean = (tx.clean_merchant || '').toLowerCase().includes(q);
-      const matchNotes = (tx.notes || '').toLowerCase().includes(q);
-      const matchCat = (tx.category || '').toLowerCase().includes(q);
-      if (!matchDesc && !matchClean && !matchNotes && !matchCat) return false;
-    }
-    return true;
+    const title = tx.title || tx.description || tx.name || 'Transaction';
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tx.category && tx.category.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesType = typeFilter === 'all' || tx.type === typeFilter;
+    const matchesCategory = categoryFilter === 'all' || tx.category === categoryFilter;
+    return matchesSearch && matchesType && matchesCategory;
   });
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this transaction record?')) {
-      setDeletingId(id);
-      try {
-        await deleteTransaction(id);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
-
-  const handleResetFilters = () => {
-    setSearch('');
-    setSelectedCategory('All');
-    setSelectedType('All');
-    setStartDate('');
-    setEndDate('');
-  };
+  const categories = [...new Set(transactions.map(tx => tx.category).filter(Boolean))];
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
-            Transaction Ledger
-          </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
-            Audit, categorize, and inspect all cash flows with deterministic UPI narration cleaning.
-          </p>
-        </div>
-        <button
-          onClick={onOpenNewTransaction}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Record Transaction</span>
-        </button>
+    <div style={{ paddingBottom: '48px', width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* Header Banner */}
+      <div style={{ background: '#091510', border: '1px solid rgba(110,231,183,0.14)', padding: '20px', borderRadius: '16px', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: '900', color: '#F0FDF4', margin: 0 }}>Transactions Ledger</h1>
+        <p style={{ fontSize: '13px', color: '#A7C4B5', marginTop: '4px', margin: 0 }}>
+          Comprehensive telemetry of all recorded cash inflows and outflows.
+        </p>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {/* Search */}
-          <div className="lg:col-span-2 relative">
-            <Search className="w-4 h-4 text-[#A7C4B5] absolute left-3 top-3" />
-            <input
-              type="text"
-              placeholder="Search merchant, narration, or notes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] placeholder:text-[#A7C4B5]/50"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] [color-scheme:dark]"
-            >
-              <option value="All">All Categories</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Type Filter */}
-          <div>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] [color-scheme:dark]"
-            >
-              <option value="All">All Types</option>
-              <option value="expense">Expenses Only</option>
-              <option value="income">Income Only</option>
-            </select>
-          </div>
-
-          {/* Date Range quick clear / reset */}
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-2 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] [color-scheme:dark]"
-              title="Start Date"
-            />
-            {(search || selectedCategory !== 'All' || selectedType !== 'All' || startDate || endDate) && (
-              <button
-                onClick={handleResetFilters}
-                className="p-2 rounded-xl bg-[#11251B] text-[#A7C4B5] hover:text-[#F0FDF4] hover:bg-[#11251B]/80 text-xs flex-shrink-0 cursor-pointer"
-                title="Reset Filters"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+      <div style={{ background: '#091510', border: '1px solid rgba(110,231,183,0.14)', padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px', background: '#050B09', border: '1px solid rgba(110,231,183,0.12)', borderRadius: '12px', padding: '8px 14px' }}>
+          <Search style={{ width: '16px', height: '16px', color: '#A7C4B5', flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Search transactions by title or category..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: '#F0FDF4', fontSize: '13px', outline: 'none', width: '100%' }}
+          />
         </div>
 
-        {/* Status text */}
-        <div className="flex items-center justify-between text-[11px] text-[#A7C4B5] pt-1">
-          <span>Showing {filteredTransactions.length} of {transactions.length} records</span>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#34D399]"></span> Income
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FB7185]"></span> Expense
-            </span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Type Filter */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            style={{ background: '#050B09', border: '1px solid rgba(110,231,183,0.12)', color: '#F0FDF4', padding: '9px 14px', borderRadius: '12px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Types</option>
+            <option value="income">Income Only</option>
+            <option value="expense">Expense Only</option>
+          </select>
+
+          {/* Category Filter */}
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{ background: '#050B09', border: '1px solid rgba(110,231,183,0.12)', color: '#F0FDF4', padding: '9px 14px', borderRadius: '12px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+      {/* Transactions Table Container */}
+      <div style={{ background: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
-              <tr className="bg-[#091510] border-b border-[rgba(110,231,183,0.16)] text-[#A7C4B5] uppercase tracking-wider text-[10px]">
-                <th className="py-3.5 px-4 font-semibold">Date</th>
-                <th className="py-3.5 px-4 font-semibold">Merchant / Narration</th>
-                <th className="py-3.5 px-4 font-semibold">Category</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Amount</th>
-                <th className="py-3.5 px-4 font-semibold text-center">Type</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
+              <tr style={{ borderBottom: '1px solid rgba(110,231,183,0.1)', color: '#A7C4B5', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <th style={{ padding: '16px 20px' }}>Transaction</th>
+                <th style={{ padding: '16px 20px' }}>Category</th>
+                <th style={{ padding: '16px 20px' }}>Date</th>
+                <th style={{ padding: '16px 20px', textAlign: 'right' }}>Amount</th>
+                <th style={{ padding: '16px 20px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[rgba(110,231,183,0.1)] text-[#F0FDF4]">
+            <tbody>
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-xs text-[#A7C4B5]">
-                    No transactions match your current search or filter criteria.
+                  <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#A7C4B5' }}>
+                    No transactions found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-[#11251B]/40 transition-colors group">
-                    {/* Date */}
-                    <td className="py-3.5 px-4 font-mono text-[#A7C4B5] whitespace-nowrap">
-                      {formatDate(tx.date)}
-                    </td>
-
-                    {/* Merchant & Narration */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex flex-col">
-                        <div className="font-semibold text-[#F0FDF4] flex items-center gap-1.5">
-                          <span>{tx.clean_merchant || tx.description}</span>
-                          {tx.is_demo === 1 && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] bg-white/5 text-[#A7C4B5] border border-white/10 font-normal">
-                              demo
-                            </span>
-                          )}
+                filteredTransactions.map((tx, idx) => {
+                  const txTitle = tx.title || tx.description || tx.name || (tx.type === 'income' ? 'Income' : 'Expense');
+                  return (
+                    <tr key={tx.id || idx} style={{ borderBottom: '1px solid rgba(110,231,183,0.06)', transition: 'background 0.15s ease' }} onMouseEnter={(e) => e.currentTarget.style.background = '#0d1d16'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: tx.type === 'income' ? 'rgba(16,185,129,0.1)' : 'rgba(251,113,133,0.1)', color: tx.type === 'income' ? '#10B981' : '#FB7185', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {tx.type === 'income' ? <ArrowDownLeft style={{ width: '18px', height: '18px' }} /> : <ArrowUpRight style={{ width: '18px', height: '18px' }} />}
                         </div>
-                        {tx.clean_merchant && tx.clean_merchant !== tx.description && (
-                          <span className="text-[10px] text-[#A7C4B5]/70 font-mono truncate max-w-xs" title={tx.description}>
-                            Raw: {tx.description}
-                          </span>
-                        )}
-                        {tx.notes && (
-                          <span className="text-[10px] text-[#A7C4B5]/90 italic mt-0.5">
-                            Note: {tx.notes}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Category badge */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span
-                        className="px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                        style={{
-                          backgroundColor: `${CATEGORY_COLORS[tx.category] || '#10B981'}15`,
-                          borderColor: `${CATEGORY_COLORS[tx.category] || '#10B981'}40`,
-                          color: CATEGORY_COLORS[tx.category] || '#6EE7B7'
-                        }}
-                      >
-                        {tx.category}
-                      </span>
-                    </td>
-
-                    {/* Amount */}
-                    <td className="py-3.5 px-4 text-right font-mono font-bold whitespace-nowrap text-sm">
-                      <span className={tx.type === 'income' ? 'text-[#34D399]' : 'text-[#FB7185]'}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#F0FDF4' }}>{txTitle}</div>
+                          <div style={{ fontSize: '11px', color: '#A7C4B5', textTransform: 'capitalize' }}>{tx.type}</div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '600', background: 'rgba(110,231,183,0.08)', color: '#6EE7B7' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: CATEGORY_COLORS[tx.category] || '#10B981' }} />
+                          {tx.category || 'General'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', color: '#A7C4B5', fontSize: '12px' }}>
+                        {tx.date || 'Today'}
+                      </td>
+                      <td style={{ padding: '16px 20px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px', color: tx.type === 'income' ? '#10B981' : '#FB7185' }}>
                         {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                      </span>
-                    </td>
-
-                    {/* Type pill */}
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        tx.type === 'income' ? 'bg-[#34D399]/15 text-[#34D399]' : 'bg-[#FB7185]/15 text-[#FB7185]'
-                      }`}>
-                        {tx.type === 'income' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-                        {tx.type}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5 opacity-90 group-hover:opacity-100">
-                        <button
-                          onClick={() => onEditTransaction(tx)}
-                          className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#6EE7B7] hover:bg-[#11251B] transition-colors cursor-pointer"
-                          title="Edit transaction"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(tx.id)}
-                          disabled={deletingId === tx.id}
-                          className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#FB7185] hover:bg-[#11251B] transition-colors cursor-pointer disabled:opacity-40"
-                          title="Delete transaction"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td style={{ padding: '16px 20px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          <button
+                            onClick={() => onEditTransaction && onEditTransaction(tx)}
+                            style={{ background: 'transparent', border: 'none', color: '#A7C4B5', cursor: 'pointer', padding: '6px', borderRadius: '6px' }}
+                            title="Edit transaction"
+                          >
+                            <Edit3 style={{ width: '14px', height: '14px' }} />
+                          </button>
+                          <button
+                            onClick={() => deleteTransaction && deleteTransaction(tx.id)}
+                            style={{ background: 'transparent', border: 'none', color: '#FB7185', cursor: 'pointer', padding: '6px', borderRadius: '6px' }}
+                            title="Delete transaction"
+                          >
+                            <Trash2 style={{ width: '14px', height: '14px' }} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   );
 }

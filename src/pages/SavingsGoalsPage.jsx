@@ -1,195 +1,181 @@
+// @refresh reload
 import React, { useState } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, formatDate } from '../utils/formatters';
-import {
-  Target,
-  Plus,
-  TrendingUp,
-  Calendar,
-  PlusCircle,
-  Edit2,
-  Trash2,
-  CheckCircle2,
-  Sparkles
-} from 'lucide-react';
+import { Plus, Calendar, Edit2, Trash2 } from 'lucide-react';
 
-export default function SavingsGoalsPage({ onOpenNewGoal, onEditGoal, onContributeGoal }) {
-  const { savingsGoals, deleteSavingsGoal } = useFinance();
-  const [deletingId, setDeletingId] = useState(null);
+export default function SavingsGoalsPage() {
+  const [goals, setGoals] = useState([
+    {
+      id: 1,
+      title: 'M4 MacBook Pro Upgrade',
+      description: 'Tech workstation upgrade for AI dev and design workflows',
+      targetAmount: 180000,
+      currentAmount: 92000,
+      targetDate: '25 Jan 2027',
+      isDemo: true,
+    },
+    {
+      id: 2,
+      title: 'Tokyo Vacation Fund',
+      description: 'Autumn trip',
+      targetAmount: 100000,
+      currentAmount: 35000,
+      targetDate: '26 Mar 2027',
+      isDemo: false,
+    },
+    {
+      id: 3,
+      title: 'Tokyo Vacation Fund',
+      description: 'Autumn trip',
+      targetAmount: 100000,
+      currentAmount: 35000,
+      targetDate: '27 Mar 2027',
+      isDemo: false,
+    },
+    {
+      id: 4,
+      title: 'Emergency Fund (6 Months)',
+      description: 'Liquid high-yield reserve for unplanned medical or job transitions',
+      targetAmount: 200000,
+      currentAmount: 145000,
+      targetDate: '15 Dec 2027',
+      isDemo: true,
+    },
+    {
+      id: 5,
+      title: 'Japan Autumn Vacation',
+      description: 'Flights, JR pass, and Tokyo-Kyoto stay',
+      targetAmount: 150000,
+      currentAmount: 60000,
+      targetDate: '10 Nov 2027',
+      isDemo: true,
+    },
+  ]);
 
-  const totalSaved = savingsGoals.reduce((sum, g) => sum + g.current_amount, 0);
-  const totalTarget = savingsGoals.reduce((sum, g) => sum + g.target_amount, 0);
-  const overallPercentage = totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete this savings goal? Stored allocations will be removed.')) {
-      setDeletingId(id);
-      try {
-        await deleteSavingsGoal(id);
-      } finally {
-        setDeletingId(null);
-      }
-    }
+  const handleDeleteGoal = (id) => {
+    setGoals(goals.filter((g) => g.id !== id));
   };
 
+  const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0);
+  const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
+  const overallPortfolioProgress = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
-            Savings Targets & Goals
-          </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
-            Lock in dedicated reserves for emergency safety, life milestones, and gear upgrades.
-          </p>
-        </div>
-        <button
-          onClick={onOpenNewGoal}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>New Savings Goal</span>
-        </button>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto' }}>
 
-      {/* Aggregate Progress Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0D1D16] to-[#11251B] border border-[rgba(110,231,183,0.2)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+      {/* Top Total Goal Portfolio Banner */}
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#A7C4B5] font-semibold">
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#8EA399', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Goal Portfolio
-            </div>
-            <div className="text-3xl font-black font-mono text-[#6EE7B7] mt-1">
-              {formatCurrency(totalSaved)}
-              <span className="text-base font-normal text-[#A7C4B5]"> / {formatCurrency(totalTarget)}</span>
+            </span>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace', marginTop: '4px' }}>
+              ₹{totalSaved.toLocaleString()} <span style={{ fontSize: '18px', fontWeight: 'normal', color: '#8EA399' }}>/ ₹{totalTarget.toLocaleString()}</span>
             </div>
           </div>
-          <div className="text-right">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#10B981]/20 text-[#6EE7B7] border border-[#10B981]/40">
-              {overallPercentage.toFixed(1)}% Achieved
-            </span>
+          <div style={{ backgroundColor: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981', padding: '6px 14px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+            {overallPortfolioProgress}% Achieved
           </div>
         </div>
 
-        {/* Global Progress Bar */}
-        <div className="w-full bg-[#050B09] h-3 rounded-full overflow-hidden p-0.5 border border-white/5">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[#10B981] to-[#34D399] transition-all duration-500 shadow-sm"
-            style={{ width: `${Math.min(100, overallPercentage)}%` }}
-          />
+        {/* Portfolio Progress Bar */}
+        <div style={{ width: '100%', height: '8px', backgroundColor: '#1C3930', borderRadius: '9999px', overflow: 'hidden', marginTop: '16px' }}>
+          <div style={{ width: `${overallPortfolioProgress}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '9999px', transition: 'width 0.3s ease' }} />
         </div>
       </div>
 
-      {/* Goal Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {savingsGoals.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-xs text-[#A7C4B5] bg-[#0D1D16] rounded-2xl border border-[rgba(110,231,183,0.16)]">
-            No savings goals established yet. Click "New Savings Goal" to track your targets.
-          </div>
-        ) : (
-          savingsGoals.map((goal) => {
-            const isCompleted = goal.current_amount >= goal.target_amount;
-            const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
-            const remaining = Math.max(0, goal.target_amount - goal.current_amount);
+      {/* Savings Goals Grid (3 Columns) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
+        {goals.map((goal) => {
+          const progress = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+          const remaining = goal.targetAmount - goal.currentAmount;
 
-            return (
-              <div
-                key={goal.id}
-                className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] hover:border-[#10B981]/40 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  {/* Top: Name & Completed badge */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h2 className="text-base font-bold text-[#F0FDF4] flex items-center gap-1.5">
-                        <span>{goal.name}</span>
-                        {goal.is_demo === 1 && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-white/5 text-[#A7C4B5] border border-white/10 font-normal">
-                            demo
-                          </span>
-                        )}
-                      </h2>
-                    </div>
-                    {isCompleted ? (
-                      <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/40">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Completed
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#11251B] text-[#6EE7B7] border border-[#10B981]/20">
-                        {pct.toFixed(0)}%
+          return (
+            <div
+              key={goal.id}
+              style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
+            >
+              <div>
+                {/* Header: Title & Progress Pill */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+                  <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{goal.title}</span>
+                    {goal.isDemo && (
+                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', color: '#8EA399', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 'normal' }}>
+                        demo
                       </span>
                     )}
-                  </div>
+                  </h2>
+                  <span style={{ padding: '2px 8px', borderRadius: '9999px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)', fontFamily: 'monospace' }}>
+                    {progress}%
+                  </span>
+                </div>
 
-                  {goal.description && (
-                    <p className="text-xs text-[#A7C4B5] line-clamp-2 mb-4 leading-relaxed">
-                      {goal.description}
-                    </p>
-                  )}
+                <p style={{ fontSize: '12px', color: '#8EA399', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+                  {goal.description}
+                </p>
 
-                  {/* Amounts */}
-                  <div className="p-3 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.12)] mb-3">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <span className="text-xs text-[#A7C4B5]">Current Saved</span>
-                      <span className="text-lg font-bold font-mono text-[#6EE7B7]">
-                        {formatCurrency(goal.current_amount)}
-                      </span>
+                {/* Amounts Box */}
+                <div style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#8EA399', marginBottom: '2px' }}>Current Saved</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace', color: '#10B981' }}>
+                        ₹{goal.currentAmount.toLocaleString()}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-baseline text-[11px] text-[#A7C4B5]">
-                      <span>Target: <strong>{formatCurrency(goal.target_amount)}</strong></span>
-                      <span>Remaining: <strong className="text-[#F0FDF4]">{formatCurrency(remaining)}</strong></span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '11px', color: '#8EA399', marginBottom: '2px' }}>Remaining</div>
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', color: '#F0FDF4' }}>
+                        ₹{remaining.toLocaleString()}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="w-full bg-[#11251B] h-2 rounded-full overflow-hidden mb-3">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${isCompleted ? 'bg-[#34D399]' : 'bg-[#10B981]'}`}
-                      style={{ width: `${Math.min(100, pct)}%` }}
-                    />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#8EA399', marginBottom: '10px' }}>
+                    <span>Target: ₹{goal.targetAmount.toLocaleString()}</span>
                   </div>
 
-                  {/* Target date */}
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#A7C4B5] mb-4">
-                    <Calendar className="w-3.5 h-3.5 text-[#10B981]" />
-                    <span>Target Date: <strong>{formatDate(goal.target_date)}</strong></span>
+                  {/* Progress Bar */}
+                  <div style={{ width: '100%', height: '6px', backgroundColor: '#1C3930', borderRadius: '9999px', overflow: 'hidden' }}>
+                    <div style={{ width: `${progress}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '9999px', transition: 'width 0.3s ease' }} />
                   </div>
                 </div>
 
-                {/* Bottom Actions: Deposit + Edit/Delete */}
-                <div className="pt-3 border-t border-[rgba(110,231,183,0.12)] flex items-center justify-between">
-                  <button
-                    onClick={() => onContributeGoal(goal)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#11251B] hover:bg-[#163023] border border-[#10B981]/40 text-[#6EE7B7] text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span>Deposit Money</span>
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => onEditGoal(goal)}
-                      className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#6EE7B7] hover:bg-[#11251B] transition-colors cursor-pointer"
-                      title="Edit Goal"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(goal.id)}
-                      disabled={deletingId === goal.id}
-                      className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#FB7185] hover:bg-[#11251B] transition-colors cursor-pointer disabled:opacity-40"
-                      title="Delete Goal"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                {/* Target Date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8EA399', marginBottom: '16px' }}>
+                  <Calendar size={14} style={{ color: '#10B981' }} />
+                  <span>Target Date: <strong style={{ color: '#F0FDF4' }}>{goal.targetDate}</strong></span>
                 </div>
               </div>
-            );
-          })
-        )}
+
+              {/* Footer Actions */}
+              <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(110,231,183,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button
+                  style={{ backgroundColor: 'transparent', border: '1px solid rgba(110,231,183,0.3)', color: '#10B981', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+                >
+                  <Plus size={14} /> Deposit Money
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    style={{ padding: '6px', borderRadius: '8px', color: '#8EA399', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                    title="Edit goal"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    style={{ padding: '6px', borderRadius: '8px', color: '#8EA399', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                    title="Delete goal"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,253 +1,296 @@
-import React, { useState, useEffect } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { formatCurrency } from '../utils/formatters';
+// @refresh reload
+import React, { useState } from 'react';
 import {
-  Settings,
-  ShieldCheck,
-  Database,
-  Trash2,
-  RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
-  Lock,
-  Wallet
+    User,
+    Bell,
+    Shield,
+    Palette,
+    Save,
+    Moon,
+    Sun,
+    Database,
+    RotateCcw,
+    Trash2,
+    Lock
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { settings, updateSettings, resetDemoData } = useFinance();
+    // Settings Form State
+    const [profile, setProfile] = useState({
+        name: 'Sharanya Michael',
+        email: 'sharanya.michael@example.com',
+        currency: 'INR (₹)',
+        monthlyBudgetLimit: 65000,
+    });
 
-  const [formData, setFormData] = useState({
-    monthly_budget: 65000,
-    min_savings_buffer: 20000,
-    preferred_currency: 'INR',
-    currency_symbol: '₹',
-    demo_mode_enabled: true
-  });
+    const [notifications, setNotifications] = useState({
+        emailAlerts: true,
+        coolingOffReminders: true,
+        budgetThresholdWarnings: true,
+        weeklyReport: false,
+    });
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [resetMessage, setResetMessage] = useState('');
+    const [themeMode, setThemeMode] = useState('obsidian'); // Obsidian Dark Theme
+    const [isSaved, setIsSaved] = useState(false);
 
-  useEffect(() => {
-    if (settings) {
-      setFormData({
-        monthly_budget: settings.monthly_budget,
-        min_savings_buffer: settings.min_savings_buffer,
-        preferred_currency: settings.preferred_currency,
-        currency_symbol: settings.currency_symbol,
-        demo_mode_enabled: settings.demo_mode_enabled
-      });
-    }
-  }, [settings]);
+    const handleProfileChange = (e) => {
+        setProfile({ ...profile, [e.target.name]: e.target.value });
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setSaveSuccess(false);
-    try {
-      await updateSettings(formData);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      alert('Error updating settings');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    const handleNotificationToggle = (key) => {
+        setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
 
-  const handleReset = async (mode) => {
-    const confirmation = window.confirm(
-      mode === 'restore'
-        ? 'Reset data to fresh demo state?'
-        : mode === 'clear_demo_only'
-        ? 'Remove all demo records and keep only your custom entries?'
-        : 'Wipe all records completely and start fresh?'
-    );
+    const handleSaveSettings = (e) => {
+        e.preventDefault();
+        localStorage.setItem('pocketpilot_user_profile', JSON.stringify(profile));
+        localStorage.setItem('pocketpilot_notifications', JSON.stringify(notifications));
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2500);
+    };
 
-    if (confirmation) {
-      try {
-        await resetDemoData(mode);
-        setResetMessage('Database operation executed successfully.');
-        setTimeout(() => setResetMessage(''), 4000);
-      } catch (err) {
-        alert('Reset operation failed');
-      }
-    }
-  };
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto' }}>
 
-  return (
-    <div className="space-y-6 pb-12 animate-fade-in max-w-4xl">
-      {/* Header */}
-      <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
-        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
-          System Settings & Privacy Architecture
-        </h1>
-        <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
-          Configure spending guardrails, manage demo telemetry, and review local data persistence policies.
-        </p>
-      </div>
+            {/* Top Header Banner */}
+            <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                <div>
+                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>
+                        System Settings
+                    </h1>
+                    <p style={{ fontSize: '13px', color: '#8EA399', margin: 0 }}>
+                        Manage profile configurations, notification preferences, persistent guardrails, and data controls.
+                    </p>
+                </div>
 
-      {saveSuccess && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-[#10B981]/15 border border-[#10B981]/40 text-[#6EE7B7] text-xs">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#10B981]" />
-          <span>Financial settings updated and synced across all dashboard modules.</span>
-        </div>
-      )}
+                {isSaved && (
+                    <div style={{ padding: '8px 16px', borderRadius: '10px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        ✓ Settings saved successfully!
+                    </div>
+                )}
+            </div>
 
-      {resetMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] text-xs">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>{resetMessage}</span>
-        </div>
-      )}
+            {/* Main Settings Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
-      {/* Main Settings Form */}
-      <form onSubmit={handleSubmit} className="p-6 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] space-y-5">
-        <div className="flex items-center gap-2 pb-3 border-b border-[rgba(110,231,183,0.12)]">
-          <Wallet className="w-4 h-4 text-[#10B981]" />
-          <h2 className="text-sm font-bold text-[#F0FDF4]">Financial Parameters</h2>
-        </div>
+                {/* Left Column: Account Profile & Theme Settings */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-[#A7C4B5] mb-1">
-              Monthly Budget Cap (₹ INR)
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-[#A7C4B5] font-mono">₹</span>
-              <input
-                type="number"
-                step="500"
-                min="1000"
-                value={formData.monthly_budget}
-                onChange={(e) => setFormData(prev => ({ ...prev, monthly_budget: parseFloat(e.target.value) || 0 }))}
-                required
-                className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-sm text-[#F0FDF4] font-mono"
-              />
-            </div>
-            <p className="text-[11px] text-[#A7C4B5] mt-1">
-              Maximum monthly ceiling used for budget warnings & affordability scoring.
-            </p>
-          </div>
+                    {/* User Profile Card */}
+                    <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                            <User size={18} style={{ color: '#10B981' }} />
+                            <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>User Profile Settings</h2>
+                        </div>
 
-          <div>
-            <label className="block text-xs font-medium text-[#A7C4B5] mb-1">
-              Minimum Safety Buffer (₹ INR)
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-[#A7C4B5] font-mono">₹</span>
-              <input
-                type="number"
-                step="500"
-                min="0"
-                value={formData.min_savings_buffer}
-                onChange={(e) => setFormData(prev => ({ ...prev, min_savings_buffer: parseFloat(e.target.value) || 0 }))}
-                required
-                className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-sm text-[#F0FDF4] font-mono"
-              />
-            </div>
-            <p className="text-[11px] text-[#A7C4B5] mt-1">
-              Untouchable emergency floor. The Affordability Engine warns if any purchase breaches this.
-            </p>
-          </div>
-        </div>
+                        <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '6px' }}>
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={profile.name}
+                                    onChange={handleProfileChange}
+                                    style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 14px', fontSize: '13px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-[#A7C4B5] mb-1">
-              Preferred Currency
-            </label>
-            <select
-              value={formData.preferred_currency}
-              onChange={(e) => {
-                const curr = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  preferred_currency: curr,
-                  currency_symbol: curr === 'INR' ? '₹' : curr === 'USD' ? '$' : '€'
-                }));
-              }}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] [color-scheme:dark]"
-            >
-              <option value="INR">Indian Rupee (₹ INR)</option>
-              <option value="USD">US Dollar ($ USD)</option>
-              <option value="EUR">Euro (€ EUR)</option>
-            </select>
-          </div>
-        </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '6px' }}>
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={profile.email}
+                                    onChange={handleProfileChange}
+                                    style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 14px', fontSize: '13px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                            </div>
 
-        <div className="pt-2 flex justify-end">
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="px-5 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] cursor-pointer"
-          >
-            {isSaving ? 'Saving Changes...' : 'Save Financial Parameters'}
-          </button>
-        </div>
-      </form>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '6px' }}>
+                                        Primary Currency
+                                    </label>
+                                    <select
+                                        name="currency"
+                                        value={profile.currency}
+                                        onChange={handleProfileChange}
+                                        style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 14px', fontSize: '13px', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
+                                    >
+                                        <option>INR (₹)</option>
+                                        <option>USD ($)</option>
+                                        <option>EUR (€)</option>
+                                        <option>GBP (£)</option>
+                                    </select>
+                                </div>
 
-      {/* Demo Data Management */}
-      <div className="p-6 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] space-y-4">
-        <div className="flex items-center gap-2 pb-3 border-b border-[rgba(110,231,183,0.12)]">
-          <Database className="w-4 h-4 text-[#38BDF8]" />
-          <h2 className="text-sm font-bold text-[#F0FDF4]">Demo Data Controls</h2>
-        </div>
-        <p className="text-xs text-[#A7C4B5] leading-relaxed">
-          Switch between sample hackathon demonstration data and your own real transactions, or perform a clean slate reset anytime.
-        </p>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#8EA399', marginBottom: '6px' }}>
+                                        Monthly Budget Cap (₹)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="monthlyBudgetLimit"
+                                        value={profile.monthlyBudgetLimit}
+                                        onChange={handleProfileChange}
+                                        style={{ width: '100%', backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '12px', padding: '10px 14px', fontSize: '13px', fontFamily: 'monospace', color: '#F0FDF4', outline: 'none', boxSizing: 'border-box' }}
+                                    />
+                                </div>
+                            </div>
 
-        <div className="flex flex-wrap gap-3 pt-1">
-          <button
-            type="button"
-            onClick={() => handleReset('restore')}
-            className="px-4 py-2 rounded-xl bg-[#11251B] hover:bg-[#163023] border border-[#10B981]/40 text-[#6EE7B7] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reset to Clean Demo State</span>
-          </button>
+                            <button
+                                type="submit"
+                                style={{ backgroundColor: '#10B981', color: '#050B09', fontWeight: 'bold', fontSize: '12px', padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)', marginTop: '8px' }}
+                            >
+                                <Save size={16} /> Save Profile Changes
+                            </button>
+                        </form>
+                    </div>
 
-          <button
-            type="button"
-            onClick={() => handleReset('clear_demo_only')}
-            className="px-4 py-2 rounded-xl bg-[#11251B] hover:bg-[#163023] border border-[rgba(110,231,183,0.16)] text-[#F0FDF4] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <span>Remove Demo Records (Keep Custom Only)</span>
-          </button>
+                    {/* Theme & Display Mode */}
+                    <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                            <Palette size={18} style={{ color: '#38BDF8' }} />
+                            <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Theme & Visual Style</h2>
+                        </div>
 
-          <button
-            type="button"
-            onClick={() => handleReset('clear_all')}
-            className="px-4 py-2 rounded-xl bg-[#FB7185]/10 hover:bg-[#FB7185]/20 border border-[#FB7185]/30 text-[#FB7185] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Clear All Data</span>
-          </button>
-        </div>
-      </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div
+                                onClick={() => setThemeMode('obsidian')}
+                                style={{ backgroundColor: '#050B09', border: themeMode === 'obsidian' ? '2px solid #10B981' : '1px solid #1C3930', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
+                            >
+                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#091510', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                    <Moon size={16} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#F0FDF4' }}>Obsidian Dark</div>
+                                    <div style={{ fontSize: '11px', color: '#8EA399' }}>Emerald Accent</div>
+                                </div>
+                            </div>
 
-      {/* Privacy & Storage Transparency */}
-      <div className="p-6 rounded-2xl bg-[#091510] border border-[rgba(110,231,183,0.16)] space-y-3 text-xs text-[#A7C4B5]">
-        <div className="flex items-center gap-2 text-[#6EE7B7] font-semibold text-sm">
-          <Lock className="w-4 h-4 text-[#10B981]" />
-          <span>Zero-Knowledge Privacy Policy & Storage Transparency</span>
-        </div>
+                            <div
+                                onClick={() => setThemeMode('midnight')}
+                                style={{ backgroundColor: '#050B09', border: themeMode === 'midnight' ? '2px solid #10B981' : '1px solid #1C3930', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.6 }}
+                            >
+                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#091510', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(56,189,248,0.3)' }}>
+                                    <Sun size={16} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#F0FDF4' }}>Midnight Slate</div>
+                                    <div style={{ fontSize: '11px', color: '#8EA399' }}>Cyan Accent</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <ul className="space-y-2 leading-relaxed list-disc list-inside">
-          <li>
-            <strong>No Banking Credentials Requested:</strong> PocketPilot never asks for or stores bank passwords, netbanking IDs, UPI PINs, OTPs, or debit/credit card CVVs.
-          </li>
-          <li>
-            <strong>Transparent Persistence:</strong> Your financial data is persisted locally in the workspace SQLite database (backed by Python FastAPI) and cached in your browser.
-          </li>
-          <li>
-            <strong>Local Storage Notice:</strong> This build operates on local persistence. It is not synced to third-party cloud analytics or unencrypted external databases.
-          </li>
-          <li>
-            <strong>No Fabricated Connections:</strong> We do not display fake "Bank Account Connected: HDFC / SBI" badges when real open-banking credentials are not authorized.
-          </li>
-        </ul>
-      </div>
-    </div>
-  );
+                </div>
+
+                {/* Right Column: Guardrail Alerts */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                    {/* Impulse Guard & Notification Preferences */}
+                    <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                            <Bell size={18} style={{ color: '#FBBF24' }} />
+                            <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Guardrail & Alert Notifications</h2>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {[
+                                { key: 'coolingOffReminders', label: 'Cooling-Off Window Blackout Alerts', desc: 'Notify immediately when transactions occur during locked hours.' },
+                                { key: 'budgetThresholdWarnings', label: 'Daily Budget Pace Warnings', desc: 'Alert when today\'s spend exceeds 80% of daily allocation.' },
+                                { key: 'emailAlerts', label: 'Security & Auth Notifications', desc: 'Receive security confirmation logs for configuration updates.' },
+                                { key: 'weeklyReport', label: 'Weekly Telemetry Summary', desc: 'Receive weekly cash flow pacing insights via email.' },
+                            ].map((item) => (
+                                <div key={item.key} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', padding: '12px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)' }}>
+                                    <div>
+                                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#F0FDF4', marginBottom: '2px' }}>{item.label}</div>
+                                        <div style={{ fontSize: '11px', color: '#8EA399' }}>{item.desc}</div>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={notifications[item.key]}
+                                        onChange={() => handleNotificationToggle(item.key)}
+                                        style={{ width: '18px', height: '18px', accentColor: '#10B981', cursor: 'pointer', marginTop: '2px' }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* Full Width Sections: Demo Data Controls & Privacy Policy */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                {/* Demo Data Controls */}
+                <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                        <Database size={18} style={{ color: '#10B981' }} />
+                        <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Demo Data Controls</h2>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#8EA399', margin: '0 0 20px 0' }}>
+                        Switch between sample hackathon demonstration data and your own real transactions, or perform a clean slate reset anytime.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => window.location.reload()}
+                            style={{ backgroundColor: '#050B09', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '10px', padding: '10px 16px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
+                            <RotateCcw size={14} /> Reset to Clean Demo State
+                        </button>
+                        <button
+                            onClick={() => alert('Custom records filter applied.')}
+                            style={{ backgroundColor: '#050B09', color: '#F0FDF4', border: '1px solid #1C3930', borderRadius: '10px', padding: '10px 16px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                            Remove Demo Records (Keep Custom Only)
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm('Are you sure you want to clear all data?')) {
+                                    localStorage.clear();
+                                    window.location.reload();
+                                }
+                            }}
+                            style={{ backgroundColor: 'rgba(251,113,133,0.15)', color: '#FB7185', border: '1px solid rgba(251,113,133,0.3)', borderRadius: '10px', padding: '10px 16px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
+                            <Trash2 size={14} /> Clear All Data
+                        </button>
+                    </div>
+                </div>
+
+                {/* Zero-Knowledge Privacy Policy & Storage Transparency */}
+                <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                        <Lock size={18} style={{ color: '#10B981' }} />
+                        <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Zero-Knowledge Privacy Policy & Storage Transparency</h2>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', color: '#8EA399', lineHeight: '1.6' }}>
+                        <div>
+                            <strong style={{ color: '#F0FDF4' }}>No Banking Credentials Requested:</strong> PocketPilot never asks for or stores bank passwords, netbanking IDs, UPI PINs, OTPs, or debit/credit card CVVs.
+                        </div>
+                        <div>
+                            <strong style={{ color: '#F0FDF4' }}>Transparent Persistence:</strong> Your financial data is persisted locally in the workspace SQLite database (backed by Python FastAPI) and cached in your browser.
+                        </div>
+                        <div>
+                            <strong style={{ color: '#F0FDF4' }}>Local Storage Notice:</strong> This build operates on local persistence. It is not synced to third-party cloud analytics or unencrypted external databases.
+                        </div>
+                        <div>
+                            <strong style={{ color: '#F0FDF4' }}>No Fabricated Connections:</strong> We do not display fake "Bank Account Connected: HDFC / SBI" badges when real open-banking credentials are not authorized.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    );
 }

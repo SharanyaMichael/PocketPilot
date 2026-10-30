@@ -9,7 +9,6 @@ import {
   Edit2,
   Trash2,
   CreditCard,
-  CheckCircle2,
   Clock
 } from 'lucide-react';
 
@@ -34,7 +33,6 @@ export default function SubscriptionsPage({ onOpenNewSubscription, onEditSubscri
     }
   };
 
-  // Helper to determine renewal urgency
   const getDaysUntilRenewal = (dateStr) => {
     if (!dateStr) return 999;
     const today = new Date();
@@ -46,87 +44,86 @@ export default function SubscriptionsPage({ onOpenNewSubscription, onEditSubscri
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)]">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* Top Header Banner */}
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>
             Subscription Manager
           </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
+          <p style={{ fontSize: '13px', color: '#8EA399', margin: 0 }}>
             Audit recurring SaaS, memberships, streaming, and automated utility commitments.
           </p>
         </div>
-        <button
-          onClick={onOpenNewSubscription}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.02] cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Add Subscription</span>
-        </button>
+        {onOpenNewSubscription && (
+          <button
+            onClick={onOpenNewSubscription}
+            style={{ backgroundColor: '#10B981', color: '#050B09', fontWeight: 'bold', fontSize: '12px', padding: '10px 18px', borderRadius: '12px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
+          >
+            <Plus size={16} /> Add Subscription
+          </button>
+        )}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Total Monthly Recurring */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+      {/* KPI Summary Cards (Forced Side-by-Side via Inline Styles) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Monthly Recurring Burn</span>
-            <div className="p-2 rounded-lg bg-[#10B981]/15 text-[#10B981]">
-              <RefreshCw className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
+              <RefreshCw size={16} />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black font-mono text-[#6EE7B7]">
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10B981', fontFamily: 'monospace' }}>
               {formatCurrency(totalMonthlyCost)}/mo
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '4px' }}>
               Normalized monthly commitment
             </div>
           </div>
         </div>
 
-        {/* Projected Annual Spend */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Projected Annual Run-Rate</span>
-            <div className="p-2 rounded-lg bg-[#38BDF8]/15 text-[#38BDF8]">
-              <CreditCard className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#38BDF8' }}>
+              <CreditCard size={16} />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black font-mono text-[#F0FDF4]">
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>
               {formatCurrency(totalAnnualCost)}/yr
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '4px' }}>
               Annualized service commitments
             </div>
           </div>
         </div>
 
-        {/* Active Subscriptions Count */}
-        <div className="p-4 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
             <span>Active Subscriptions</span>
-            <div className="p-2 rounded-lg bg-[#FBBF24]/15 text-[#FBBF24]">
-              <Clock className="w-4 h-4" />
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(251,191,36,0.15)', color: '#FBBF24' }}>
+              <Clock size={16} />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black font-mono text-[#FBBF24]">
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#FBBF24', fontFamily: 'monospace' }}>
               {subscriptions.length}
             </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
+            <div style={{ fontSize: '11px', color: '#8EA399', marginTop: '4px' }}>
               Tracked recurring services
             </div>
           </div>
         </div>
       </div>
 
-      {/* Subscription Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Subscription Cards Grid (3 Columns) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
         {subscriptions.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-xs text-[#A7C4B5] bg-[#0D1D16] rounded-2xl border border-[rgba(110,231,183,0.16)]">
+          <div style={{ gridColumn: 'span 3 / span 3', padding: '64px 0', textAlign: 'center', fontSize: '12px', color: '#8EA399', backgroundColor: '#091510', borderRadius: '16px', border: '1px solid rgba(110,231,183,0.14)' }}>
             No active subscriptions tracked. Click "Add Subscription" to monitor renewal dates.
           </div>
         ) : (
@@ -138,36 +135,36 @@ export default function SubscriptionsPage({ onOpenNewSubscription, onEditSubscri
             return (
               <div
                 key={sub.id}
-                className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] hover:border-[#10B981]/40 transition-all flex flex-col justify-between"
+                style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
               >
                 <div>
                   {/* Top Bar: Title & Renewal Pill */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
                     <div>
-                      <h2 className="text-base font-bold text-[#F0FDF4] flex items-center gap-1.5">
+                      <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                         <span>{sub.name}</span>
                         {sub.is_demo === 1 && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-white/5 text-[#A7C4B5] border border-white/10 font-normal">
+                          <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', color: '#8EA399', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 'normal' }}>
                             demo
                           </span>
                         )}
                       </h2>
-                      <span className="text-[11px] text-[#A7C4B5]">{sub.category}</span>
+                      <span style={{ fontSize: '11px', color: '#8EA399', textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: '0.05em' }}>{sub.category}</span>
                     </div>
 
                     {/* Due pill */}
-                    <div className="flex-shrink-0">
+                    <div style={{ flexShrink: 0 }}>
                       {isSoon ? (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FBBF24]/20 text-[#FBBF24] border border-[#FBBF24]/40">
-                          <AlertTriangle className="w-3 h-3" />
-                          Due in {daysLeft} days
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', backgroundColor: 'rgba(251,191,36,0.2)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)' }}>
+                          <AlertTriangle size={12} />
+                          {daysLeft === 0 ? 'Due in 0 days' : `Due in ${daysLeft} days`}
                         </span>
                       ) : isPast ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FB7185]/20 text-[#FB7185] border border-[#FB7185]/40">
+                        <span style={{ padding: '4px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', backgroundColor: 'rgba(251,113,133,0.2)', color: '#FB7185', border: '1px solid rgba(251,113,133,0.4)' }}>
                           Renewal Passed
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#11251B] text-[#6EE7B7] border border-[#10B981]/20">
+                        <span style={{ padding: '4px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: '500', backgroundColor: '#11251B', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}>
                           In {daysLeft} days
                         </span>
                       )}
@@ -175,51 +172,53 @@ export default function SubscriptionsPage({ onOpenNewSubscription, onEditSubscri
                   </div>
 
                   {/* Amounts */}
-                  <div className="p-3 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.12)] mb-3">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs text-[#A7C4B5]">Billing Amount</span>
-                      <span className="text-lg font-bold font-mono text-[#F0FDF4]">
+                  <div style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '12px', color: '#8EA399' }}>Billing Amount</span>
+                      <span style={{ fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace', color: '#F0FDF4' }}>
                         {formatCurrency(sub.amount)}
-                        <span className="text-xs font-normal text-[#A7C4B5]">/{sub.billing_frequency === 'monthly' ? 'mo' : 'yr'}</span>
+                        <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#8EA399' }}>/{sub.billing_frequency === 'monthly' ? 'mo' : 'yr'}</span>
                       </span>
                     </div>
                     {sub.billing_frequency === 'yearly' && (
-                      <div className="flex justify-between items-baseline mt-1 text-[11px] text-[#6EE7B7]">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '4px', fontSize: '11px', color: '#10B981' }}>
                         <span>Monthly Equivalent:</span>
-                        <span className="font-mono">{formatCurrency(sub.amount / 12)}/mo</span>
+                        <span style={{ fontFamily: 'monospace' }}>{formatCurrency(sub.amount / 12)}/mo</span>
                       </div>
                     )}
                   </div>
 
                   {sub.notes && (
-                    <p className="text-xs text-[#A7C4B5] italic mb-3">
+                    <p style={{ fontSize: '12px', color: '#8EA399', fontStyle: 'italic', marginBottom: '12px', margin: 0 }}>
                       "{sub.notes}"
                     </p>
                   )}
                 </div>
 
                 {/* Footer details & actions */}
-                <div className="pt-3 border-t border-[rgba(110,231,183,0.12)] flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-[#A7C4B5]">
-                    <Calendar className="w-3.5 h-3.5 text-[#10B981]" />
-                    <span>Next: <strong>{formatDate(sub.next_billing_date)}</strong></span>
+                <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(110,231,183,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8EA399' }}>
+                    <Calendar size={14} style={{ color: '#10B981' }} />
+                    <span>Next: <strong style={{ color: '#F0FDF4' }}>{daysLeft === 0 ? 'Today' : formatDate(sub.next_billing_date)}</strong></span>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => onEditSubscription(sub)}
-                      className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#6EE7B7] hover:bg-[#11251B] transition-colors cursor-pointer"
-                      title="Edit subscription"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {onEditSubscription && (
+                      <button
+                        onClick={() => onEditSubscription(sub)}
+                        style={{ padding: '6px', borderRadius: '8px', color: '#8EA399', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                        title="Edit subscription"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(sub.id)}
                       disabled={deletingId === sub.id}
-                      className="p-1.5 rounded-lg text-[#A7C4B5] hover:text-[#FB7185] hover:bg-[#11251B] transition-colors cursor-pointer disabled:opacity-40"
+                      style={{ padding: '6px', borderRadius: '8px', color: '#8EA399', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', opacity: deletingId === sub.id ? 0.4 : 1 }}
                       title="Delete subscription"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

@@ -1,398 +1,315 @@
-import React, { useState } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { formatCurrency, formatCountdown, formatDate } from '../utils/formatters';
-import {
-  ShieldAlert,
-  Timer,
-  Play,
-  Square,
-  History,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  PiggyBank,
-  ArrowRight,
-  Flame,
-  Plus,
-  Wallet
-} from 'lucide-react';
+// @refresh reload
+import React, { useState, useEffect } from 'react';
+import { ShieldAlert, Clock, CheckCircle2, Lock, Plus, Trash2, Bell, Settings, Wallet } from 'lucide-react';
 
-const DURATION_PRESETS = [
-  { label: '5 Minutes', seconds: 300 },
-  { label: '15 Minutes', seconds: 900 },
-  { label: '30 Minutes', seconds: 1800 },
-  { label: '1 Hour', seconds: 3600 },
-];
+export default function CoolingOffPage() {
+  const [items, setItems] = useState([
+    {
+      id: 1,
+      title: 'Sony WH-1000XM5 Headphones',
+      amount: 24990,
+      category: 'Electronics',
+      timeLeft: '42 hours remaining',
+      status: 'Active Cooling-Off',
+    },
+    {
+      id: 2,
+      title: 'Mechanical Keyboards & Keycaps',
+      amount: 6500,
+      category: 'Gadgets',
+      timeLeft: 'Unlocked & Ready',
+      status: 'Eligible for Purchase',
+    },
+  ]);
 
-export default function CoolingOffPage({ onOpenNewTransaction }) {
-  const { cooldown, activateCooldown, cancelCooldownSession, cooldownLogs, dailyLimit, updateDailyLimit } = useFinance();
+  // Cooling-Off Time Window State
+  const [startTime, setStartTime] = useState(() => localStorage.getItem('cooling_start_time') || '23:00');
+  const [endTime, setEndTime] = useState(() => localStorage.getItem('cooling_end_time') || '06:00');
+  const [isEditingTime, setIsEditingTime] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
 
-  const [selectedDuration, setSelectedDuration] = useState(900); // 15 mins default
-  const [customMinutes, setCustomMinutes] = useState('');
-  const [reason, setReason] = useState('');
-  const [isActivating, setIsActivating] = useState(false);
+  // Daily Budget State
+  const [dailyBudget, setDailyBudget] = useState(() => {
+    return parseFloat(localStorage.getItem('user_daily_budget')) || 2500;
+  });
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [tempBudget, setTempBudget] = useState(dailyBudget);
 
-  const handleStartCooldown = async () => {
-    setIsActivating(true);
-    let duration = selectedDuration;
-    if (customMinutes && parseInt(customMinutes) > 0) {
-      duration = parseInt(customMinutes) * 60;
-    }
+  useEffect(() => {
+    localStorage.setItem('cooling_start_time', startTime);
+    localStorage.setItem('cooling_end_time', endTime);
+  }, [startTime, endTime]);
 
-    try {
-      await activateCooldown(duration, reason || 'Discretionary spending pause');
-      setReason('');
-      setCustomMinutes('');
-    } finally {
-      setIsActivating(false);
-    }
+  useEffect(() => {
+    localStorage.setItem('user_daily_budget', dailyBudget);
+  }, [dailyBudget]);
+
+  const [newTitle, setNewTitle] = useState('');
+  const [newAmount, setNewAmount] = useState('');
+  const [newCategory, setNewCategory] = useState('Shopping');
+
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!newTitle || !newAmount) return;
+
+    const newItem = {
+      id: Date.now(),
+      title: newTitle,
+      amount: parseFloat(newAmount),
+      category: newCategory,
+      timeLeft: '72 hours remaining',
+      status: 'Active Cooling-Off',
+    };
+
+    setItems([newItem, ...items]);
+    setNewTitle('');
+    setNewAmount('');
   };
 
-  const handleCancelSession = async () => {
-    if (window.confirm('Are you sure you want to stop the active Cooling-Off session early?')) {
-      await cancelCooldownSession();
-    }
+  const handleDeleteItem = (id) => {
+    setItems(items.filter((item) => item.id !== id));
   };
 
-  // Calculate total money saved by cancelled purchases in log
-  const totalMoneySaved = cooldownLogs
-    .filter(log => log.action_taken === 'cancelled')
-    .reduce((sum, log) => sum + log.attempted_amount, 0);
+  const simulateCheckoutAttempt = () => {
+    setShowNotification(true);
+  };
 
-  const cancelledCount = cooldownLogs.filter(l => l.action_taken === 'cancelled').length;
-  const continuedCount = cooldownLogs.filter(l => l.action_taken === 'continued').length;
-  const overrodeCount = cooldownLogs.filter(l => l.action_taken === 'overrode').length;
+  const handleSaveBudget = (e) => {
+    e.preventDefault();
+    setDailyBudget(parseFloat(tempBudget) || 2500);
+    setIsEditingBudget(false);
+  };
+
+  const activeCount = items.filter(i => i.status.includes('Cooling')).length;
+  const totalLockedAmount = items
+    .filter(i => i.status.includes('Cooling'))
+    .reduce((sum, i) => sum + i.amount, 0);
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0D1D16] to-[#091510] border border-[rgba(110,231,183,0.16)]">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
+
+      {/* Simulated Popup Notification */}
+      {showNotification && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(5,11,9,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ backgroundColor: '#091510', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '20px', padding: '32px', maxWidth: '420px', width: '100%', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(251,191,36,0.15)', color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', border: '1px solid rgba(251,191,36,0.3)' }}>
+              <Bell size={28} />
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 8px 0' }}>Cooling-Off Window Active</h2>
+            <p style={{ fontSize: '13px', color: '#8EA399', lineHeight: '1.5', margin: '0 0 24px 0' }}>
+              You configured a spending blackout between <strong style={{ color: '#FBBF24' }}>{startTime}</strong> and <strong style={{ color: '#FBBF24' }}>{endTime}</strong>. Step back and let your impulse cool down!
+            </p>
+            <button
+              onClick={() => setShowNotification(false)}
+              style={{ backgroundColor: '#10B981', color: '#050B09', fontWeight: 'bold', fontSize: '13px', padding: '12px 24px', borderRadius: '12px', border: 'none', cursor: 'pointer', width: '100%', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}
+            >
+              I Understand, Pause Spending
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Top Header Banner */}
+      <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#10B981]/20 text-[#6EE7B7] border border-[#10B981]/30">
-              Core Differentiator
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', margin: 0 }}>Cooling-Off Vault</h1>
+            <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: 'rgba(251,191,36,0.15)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.3)', padding: '2px 10px', borderRadius: '9999px', fontFamily: 'monospace' }}>
+              Impulse Guard
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#F0FDF4]">
-            Global Cooling-Off Mode
-          </h1>
-          <p className="text-xs sm:text-sm text-[#A7C4B5] mt-0.5">
-            Behavioral friction to break impulsive spending loops. One global persistent session across the entire system.
+          <p style={{ fontSize: '13px', color: '#8EA399', margin: 0 }}>
+            Mandatory holding periods and nighttime blackout windows to eliminate buyer's remorse.
           </p>
         </div>
-
-        {/* Test Interception CTA */}
-        <button
-          onClick={onOpenNewTransaction}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#11251B] hover:bg-[#163023] border border-[#10B981]/40 text-[#6EE7B7] font-semibold text-xs transition-all hover:scale-[1.02] cursor-pointer"
-        >
-          <Plus className="w-4 h-4 text-[#10B981]" />
-          <span>Test Expense Intercept</span>
-        </button>
       </div>
 
-      {/* Optional Daily Spend Limit Section */}
-      <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Wallet className="w-4 h-4 text-[#10B981]" />
-            <h2 className="text-sm font-bold text-[#F0FDF4]">Optional Daily Spend Limit</h2>
+      {/* Grid for Configuration Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px' }}>
+
+        {/* Cooling-Off Time Window Configuration */}
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(251,191,36,0.15)', color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(251,191,36,0.3)', flexShrink: 0 }}>
+              <Clock size={24} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>Cooling-Off Time Window</h2>
+              <p style={{ fontSize: '12px', color: '#8EA399', margin: 0 }}>
+                No spend hours: <strong style={{ color: '#FBBF24' }}>{startTime}</strong> to <strong style={{ color: '#FBBF24' }}>{endTime}</strong>.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-[#A7C4B5]">
-            Set an automated daily limit. Whenever any transaction crosses this cap, an instant cooling-off pop-up will offer you a choice to skip & back off or proceed.
-          </p>
-        </div>
 
-        <div className="min-w-[220px] relative">
-          <span className="absolute left-3 top-2.5 text-[#A7C4B5] font-mono text-sm">₹</span>
-          <input
-            type="number"
-            min="0"
-            step="100"
-            placeholder="Disabled (e.g. 2000)"
-            value={dailyLimit}
-            onChange={(e) => updateDailyLimit(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.2)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] font-mono placeholder:text-[#A7C4B5]/40"
-          />
-        </div>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid rgba(251,191,36,0.1)' }}>
+            <button
+              onClick={simulateCheckoutAttempt}
+              style={{ backgroundColor: 'rgba(251,191,36,0.15)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '10px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Test Popup Alert
+            </button>
 
-      {/* Main Status & Activation Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Active Session Display / Activator (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          {cooldown.is_active ? (
-            <div className="p-6 rounded-2xl bg-[#0D1D16] border border-[#10B981]/40 emerald-glow shadow-2xl relative overflow-hidden">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-[#11251B] border border-[#10B981]/40 text-[#6EE7B7]">
-                    <ShieldAlert className="w-8 h-8 text-[#10B981] animate-pulse" />
-                  </div>
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#10B981]/20 text-[#6EE7B7] border border-[#10B981]/40 mb-1">
-                      <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping" />
-                      Session Active
-                    </span>
-                    <h2 className="text-lg font-bold text-[#F0FDF4]">Impulse Shield Engaged</h2>
-                  </div>
-                </div>
-
+            {isEditingTime ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  style={{ backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '8px', padding: '6px 8px', color: '#F0FDF4', fontSize: '12px', outline: 'none' }}
+                />
+                <span style={{ color: '#8EA399', fontSize: '12px' }}>to</span>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  style={{ backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '8px', padding: '6px 8px', color: '#F0FDF4', fontSize: '12px', outline: 'none' }}
+                />
                 <button
-                  onClick={handleCancelSession}
-                  className="px-3 py-1.5 rounded-xl bg-[#FB7185]/10 hover:bg-[#FB7185]/20 border border-[#FB7185]/30 text-[#FB7185] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => setIsEditingTime(false)}
+                  style={{ backgroundColor: '#10B981', color: '#050B09', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  <Square className="w-3.5 h-3.5" />
-                  <span>Stop Session</span>
+                  Save
                 </button>
               </div>
-
-              {/* Large Visible Countdown */}
-              <div className="py-6 my-2 text-center rounded-2xl bg-[#091510] border border-[rgba(110,231,183,0.16)]">
-                <div className="text-[11px] uppercase tracking-wider text-[#A7C4B5] font-semibold mb-1">
-                  Remaining Cooldown Time
-                </div>
-                <div className="text-4xl sm:text-5xl font-black font-mono tracking-widest text-[#6EE7B7]">
-                  {formatCountdown(cooldown.remaining_seconds)}
-                </div>
-                {cooldown.reason && (
-                  <p className="text-xs text-[#A7C4B5] mt-2 italic">
-                    Reason: "{cooldown.reason}"
-                  </p>
-                )}
-              </div>
-
-              {/* Session Timestamps */}
-              <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
-                <div className="p-3 rounded-xl bg-[#11251B] border border-[rgba(110,231,183,0.12)]">
-                  <span className="text-[#A7C4B5] block mb-0.5">Activated At:</span>
-                  <strong className="text-[#F0FDF4] font-mono">
-                    {cooldown.start_time ? new Date(cooldown.start_time).toLocaleTimeString() : 'N/A'}
-                  </strong>
-                </div>
-                <div className="p-3 rounded-xl bg-[#11251B] border border-[rgba(110,231,183,0.12)]">
-                  <span className="text-[#A7C4B5] block mb-0.5">Expires At:</span>
-                  <strong className="text-[#6EE7B7] font-mono">
-                    {cooldown.expiry_time ? new Date(cooldown.expiry_time).toLocaleTimeString() : 'N/A'}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="mt-4 text-[11px] text-[#A7C4B5] flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
-                <span>Timer strictly persists across browser refreshes, tab changes, and backend reboots.</span>
-              </div>
-            </div>
-          ) : (
-            <div className="p-6 rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] shadow-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-[#11251B] border border-white/5 text-[#A7C4B5]">
-                  <Timer className="w-6 h-6 text-[#10B981]" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-[#F0FDF4]">Activate Spending Cooldown</h2>
-                  <p className="text-xs text-[#A7C4B5]">Choose a duration to pause discretionary transactions.</p>
-                </div>
-              </div>
-
-              {/* Duration Presets */}
-              <div className="space-y-3 mb-4">
-                <label className="block text-xs font-medium text-[#A7C4B5]">
-                  Select Predefined Duration
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {DURATION_PRESETS.map((p) => (
-                    <button
-                      key={p.seconds}
-                      type="button"
-                      onClick={() => { setSelectedDuration(p.seconds); setCustomMinutes(''); }}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                        selectedDuration === p.seconds && !customMinutes
-                          ? 'bg-[#11251B] text-[#6EE7B7] border-[#10B981] emerald-glow-sm'
-                          : 'bg-[#091510] text-[#A7C4B5] border-[rgba(110,231,183,0.16)] hover:text-[#F0FDF4]'
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Duration Input */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-[#A7C4B5] mb-1">
-                  Or Custom Duration (Minutes)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1440"
-                  placeholder="e.g. 45"
-                  value={customMinutes}
-                  onChange={(e) => { setCustomMinutes(e.target.value); setSelectedDuration(0); }}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] placeholder:text-[#A7C4B5]/40"
-                />
-              </div>
-
-              {/* Reason */}
-              <div className="mb-5">
-                <label className="block text-xs font-medium text-[#A7C4B5] mb-1">
-                  Intent / Reason (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Prevent impulsive late-night electronics purchase"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#091510] border border-[rgba(110,231,183,0.16)] focus:border-[#10B981] focus:outline-none text-xs text-[#F0FDF4] placeholder:text-[#A7C4B5]/40"
-                />
-              </div>
-
+            ) : (
               <button
-                type="button"
-                onClick={handleStartCooldown}
-                disabled={isActivating}
-                className="w-full py-3 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#050B09] font-bold text-xs tracking-wide transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                onClick={() => setIsEditingTime(true)}
+                style={{ backgroundColor: '#1C3930', color: '#F0FDF4', border: '1px solid rgba(110,231,183,0.2)', borderRadius: '10px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Play className="w-4 h-4 stroke-[2.5]" />
-                <span>{isActivating ? 'Engaging Shield...' : 'Engage Cooling-Off Shield'}</span>
+                <Settings size={14} /> Set Time
               </button>
-            </div>
-          )}
-
-          {/* Honest Limitation Disclaimer */}
-          <div className="p-4 rounded-xl bg-[#050B09] border border-white/5 text-xs text-[#A7C4B5] flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-[#FBBF24] flex-shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong>Honest Architecture Limitation:</strong> PocketPilot intercepts and pauses expense records entered inside this application. It cannot independently lock physical bank accounts, UPI PIN entry screens on external banking apps, or debit card POS terminals without licensed open-banking/account-aggregator API access.
-            </p>
+            )}
           </div>
         </div>
 
-        {/* Stats & Rules Overview (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          {/* Prevented Outflows Stat Card */}
-          <div className="p-5 rounded-2xl bg-[#0D1D16] border border-[#10B981]/30 emerald-glow-sm">
-            <div className="flex items-center justify-between text-xs text-[#A7C4B5] mb-2">
-              <span>Impulse Purchases Averted</span>
-              <PiggyBank className="w-5 h-5 text-[#10B981]" />
+        {/* Daily Budget Configuration */}
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16,185,129,0.3)', flexShrink: 0 }}>
+              <Wallet size={24} />
             </div>
-            <div className="text-3xl font-black font-mono text-[#34D399]">
-              {formatCurrency(totalMoneySaved)}
-            </div>
-            <div className="text-[11px] text-[#A7C4B5] mt-1">
-              Preserved in your bank accounts through mindful cancellations
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>Daily Budget</h2>
+              <p style={{ fontSize: '12px', color: '#8EA399', margin: 0 }}>
+                Active Limit: <strong style={{ color: '#10B981', fontFamily: 'monospace' }}>₹{dailyBudget.toLocaleString()}</strong> / day
+              </p>
             </div>
           </div>
 
-          {/* Breakdown summary */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="p-3 rounded-xl bg-[#0D1D16] border border-[rgba(110,231,183,0.14)] text-center">
-              <span className="text-[10px] text-[#A7C4B5] uppercase font-semibold">Cancelled</span>
-              <div className="text-lg font-bold font-mono text-[#34D399] mt-0.5">{cancelledCount}</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[#0D1D16] border border-[rgba(110,231,183,0.14)] text-center">
-              <span className="text-[10px] text-[#A7C4B5] uppercase font-semibold">Continued</span>
-              <div className="text-lg font-bold font-mono text-[#FBBF24] mt-0.5">{continuedCount}</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[#0D1D16] border border-[rgba(110,231,183,0.14)] text-center">
-              <span className="text-[10px] text-[#A7C4B5] uppercase font-semibold">Overridden</span>
-              <div className="text-lg font-bold font-mono text-[#FB7185] mt-0.5">{overrodeCount}</div>
-            </div>
-          </div>
-
-          {/* Rules Card */}
-          <div className="p-5 rounded-2xl bg-[#091510] border border-[rgba(110,231,183,0.16)] text-xs text-[#A7C4B5] space-y-2.5">
-            <h3 className="font-bold text-[#F0FDF4] text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span>Interception Protocol Rules</span>
-            </h3>
-            <ul className="space-y-2 list-disc list-inside leading-relaxed text-[11px]">
-              <li><strong>Expense Blocking:</strong> Every new expense attempt is halted before persisting.</li>
-              <li><strong>Three Strict Outcomes:</strong> Cancel Purchase, Continue Cooldown, or Yes I Want to Spend.</li>
-              <li><strong>Inflows Allowed:</strong> Income entries bypass cooldown freely.</li>
-              <li><strong>Anti-Bypass:</strong> Editing existing expenses does not allow stealth additions.</li>
-            </ul>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid rgba(16,185,129,0.1)' }}>
+            {isEditingBudget ? (
+              <form onSubmit={handleSaveBudget} style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
+                <input
+                  type="number"
+                  value={tempBudget}
+                  onChange={(e) => setTempBudget(e.target.value)}
+                  style={{ backgroundColor: '#050B09', border: '1px solid #1C3930', borderRadius: '8px', padding: '6px 12px', color: '#F0FDF4', fontSize: '13px', width: '130px', outline: 'none' }}
+                />
+                <button
+                  type="submit"
+                  style={{ backgroundColor: '#10B981', color: '#050B09', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Save Budget
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => { setTempBudget(dailyBudget); setIsEditingBudget(true); }}
+                style={{ backgroundColor: '#1C3930', color: '#F0FDF4', border: '1px solid rgba(110,231,183,0.2)', borderRadius: '10px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Settings size={14} /> Set Daily Budget
+              </button>
+            )}
           </div>
         </div>
 
       </div>
 
-      {/* Cooldown Activity Log */}
-      <div className="rounded-2xl bg-[#0D1D16] border border-[rgba(110,231,183,0.16)] overflow-hidden shadow-xl">
-        <div className="p-4 bg-[#091510] border-b border-[rgba(110,231,183,0.16)] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-[#10B981]" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#F0FDF4]">
-              Cooling-Off Interception Log
-            </h2>
+      {/* KPI Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
+            <span>Items in Holding</span>
+            <Lock size={16} style={{ color: '#FBBF24' }} />
           </div>
-          <span className="text-[11px] text-[#A7C4B5]">
-            Separate from transactions • Cancelled items are never charged
-          </span>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#FBBF24', fontFamily: 'monospace' }}>
+            {activeCount} Active
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-[#050B09] border-b border-[rgba(110,231,183,0.1)] text-[#A7C4B5] text-[10px] uppercase font-semibold">
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Attempted Item / Merchant</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4 text-center">Decision Taken</th>
-                <th className="py-3 px-4">Notes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[rgba(110,231,183,0.08)] text-[#F0FDF4]">
-              {cooldownLogs.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="py-8 text-center text-xs text-[#A7C4B5]">
-                    No cooldown interceptions recorded yet.
-                  </td>
-                </tr>
-              ) : (
-                cooldownLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-[#11251B]/40 transition-colors">
-                    <td className="py-3 px-4 font-mono text-[11px] text-[#A7C4B5] whitespace-nowrap">
-                      {log.timestamp}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-[#F0FDF4]">
-                      {log.merchant}
-                    </td>
-                    <td className="py-3 px-4 text-[#A7C4B5]">
-                      {log.category}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-sm">
-                      {formatCurrency(log.attempted_amount)}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {log.action_taken === 'cancelled' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/40">
-                          <XCircle className="w-3 h-3" />
-                          Purchase Cancelled (Saved)
-                        </span>
-                      ) : log.action_taken === 'continued' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FBBF24]/20 text-[#FBBF24] border border-[#FBBF24]/40">
-                          <Timer className="w-3 h-3" />
-                          Paused & Waiting
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FB7185]/20 text-[#FB7185] border border-[#FB7185]/40">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Overrode Cooldown
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-[11px] text-[#A7C4B5] italic">
-                      {log.notes || '—'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
+            <span>Locked Capital</span>
+            <ShieldAlert size={16} style={{ color: '#10B981' }} />
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10B981', fontFamily: 'monospace' }}>
+            ₹{totalLockedAmount.toLocaleString()}
+          </div>
         </div>
+
+        <div style={{ backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#8EA399', fontSize: '12px', fontWeight: '500', marginBottom: '8px' }}>
+            <span>Default Holding Period</span>
+            <Clock size={16} style={{ color: '#38BDF8' }} />
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F0FDF4', fontFamily: 'monospace' }}>
+            72 Hours
+          </div>
+        </div>
+      </div>
+
+      {/* Items Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
+        {items.map((item) => {
+          const isActive = item.status.includes('Cooling');
+          return (
+            <div
+              key={item.id}
+              style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#091510', border: '1px solid rgba(110,231,183,0.14)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#F0FDF4', margin: '0 0 4px 0' }}>{item.title}</h2>
+                    <span style={{ fontSize: '11px', color: '#8EA399', textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: '0.05em' }}>{item.category}</span>
+                  </div>
+                  <span style={{ padding: '4px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', backgroundColor: isActive ? 'rgba(251,191,36,0.2)' : 'rgba(16,185,129,0.2)', color: isActive ? '#FBBF24' : '#10B981', border: `1px solid ${isActive ? 'rgba(251,191,36,0.4)' : 'rgba(16,185,129,0.4)'}` }}>
+                    {item.status}
+                  </span>
+                </div>
+
+                <div style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#050B09', border: '1px solid rgba(110,231,183,0.08)', marginBottom: '16px', marginTop: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: '#8EA399' }}>Locked Amount</span>
+                    <span style={{ fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace', color: '#F0FDF4' }}>
+                      ₹{item.amount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: isActive ? '#FBBF24' : '#10B981', marginTop: '8px' }}>
+                    <Clock size={14} />
+                    <span>{item.timeLeft}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(110,231,183,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button
+                  style={{ backgroundColor: isActive ? 'rgba(251,191,36,0.15)' : '#10B981', color: isActive ? '#FBBF24' : '#050B09', border: isActive ? '1px solid rgba(251,191,36,0.3)' : 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  {isActive ? 'Cooling Active' : 'Release Funds'}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteItem(item.id)}
+                  style={{ padding: '6px', borderRadius: '8px', color: '#8EA399', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                  title="Remove item"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
