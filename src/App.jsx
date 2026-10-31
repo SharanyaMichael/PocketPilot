@@ -18,6 +18,7 @@ import SavingsGoalsPage from './pages/SavingsGoalsPage';
 import AffordabilityPage from './pages/AffordabilityPage';
 import CoolingOffPage from './pages/CoolingOffPage';
 import SettingsPage from './pages/SettingsPage';
+import AboutPage from './pages/AboutPage';
 
 function PP() {
   const navigate = useNavigate();
@@ -232,12 +233,13 @@ function PP() {
             <rect x="42" y="18" width="22" height="10" rx="4" fill="#10B981" />
           </svg>
 
+          {/* Wordmark matching the reference design precisely */}
           <svg className="wordmark-svg" viewBox="0 0 520 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <text x="0" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#F0FDF4" letterSpacing="-1.5">P</text>
-            <circle cx="82" cy="53" r="21" stroke="#F0FDF4" strokeWidth="13" />
-            <path d="M76 60 L89 45 L85 57 Z" fill="#10B981" />
-            <text x="114" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#F0FDF4" letterSpacing="-1.5">cket</text>
-            <text x="282" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#F0FDF4" letterSpacing="-1.5">Pilot</text>
+            <circle cx="68" cy="53" r="21" fill="none" stroke="#F0FDF4" strokeWidth="13" />
+            <path d="M62 60 L75 45 L71 57 Z" fill="#10B981" />
+            <text x="96" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#F0FDF4" letterSpacing="-1.5">cket</text>
+            <text x="246" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#10B981" letterSpacing="-1.5">Pilot</text>
           </svg>
         </div>
 
@@ -368,6 +370,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<PP />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/dashboard/*" element={<DashboardLayout />} />
         </Routes>
       </BrowserRouter>

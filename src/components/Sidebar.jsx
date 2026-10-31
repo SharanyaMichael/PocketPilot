@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Snowflake,
   Settings,
+  Info,
   ChevronLeft,
   ChevronRight,
   Wallet
@@ -26,6 +27,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     { to: '/dashboard/affordability', icon: ShieldCheck, label: 'Affordability Checker' },
     { to: '/dashboard/cooling-off', icon: Snowflake, label: 'Cooling-Off Mode' },
     { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    { to: '/about', icon: Info, label: 'About' },
   ];
 
   return (
