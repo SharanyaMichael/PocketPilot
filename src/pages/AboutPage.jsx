@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
     Brain,
     Tags,
@@ -8,14 +7,10 @@ import {
     Eye,
     UserCheck,
     Mail,
-    Compass,
-    ArrowRight,
     Target
 } from 'lucide-react';
 
 export default function AboutPage() {
-    const navigate = useNavigate();
-
     const featureCards = [
         {
             title: "AI-POWERED INSIGHTS",
@@ -82,37 +77,39 @@ export default function AboutPage() {
     ];
 
     return (
-        <div className="space-y-6 pb-12 max-w-[1400px] mx-auto text-[#F0FDF4]">
+        <div className="w-full pb-16 space-y-10 animate-fadeIn">
 
-            {/* Page Top Title Banner */}
-            <div className="bg-[#091510] border border-[#10B981]/20 rounded-2xl p-6 lg:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
-                <div className="space-y-1">
+            {/* Page Header */}
+            <div className="flex flex-col gap-1">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F0FDF4]">
+                    About <span className="text-[#10B981]">PocketPilot</span>
+                </h1>
+                <p className="text-sm text-[#9CAFA3]">
+                    Your money deserves a smarter direction. Learn more about the vision, philosophy, and team.
+                </p>
+            </div>
+
+            {/* SECTION 1: Side-by-Side Top Layout */}
+            <div
+                className="w-full"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) 400px',
+                    gap: '24px',
+                    alignItems: 'start'
+                }}
+            >
+                {/* Left Column: Brand Narrative Panel */}
+                <div className="bg-[#091510] border border-[#10B981]/20 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl w-full">
                     <span className="text-xs font-bold tracking-widest text-[#10B981] uppercase">
                         ABOUT POCKETPILOT
                     </span>
-                    <h1 className="text-2xl lg:text-3xl font-extrabold text-[#F0FDF4] tracking-tight">
-                        System Overview & Information
-                    </h1>
-                    <p className="text-sm text-[#9CAFA3]">
-                        Learn more about the architecture, philosophy, and team behind your financial operating system.
-                    </p>
-                </div>
-            </div>
 
-            {/* SECTION 1: ABOUT POCKETPILOT & FEATURES GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-                {/* Left Card: Brand Introduction */}
-                <div className="lg:col-span-7 bg-[#091510] border border-[#10B981]/20 rounded-2xl p-6 lg:p-8 space-y-6 shadow-xl">
-                    <h2 className="text-xl font-bold text-[#F0FDF4]">
-                        About PocketPilot
-                    </h2>
-
-                    <blockquote className="border-l-2 border-[#10B981] pl-4 italic text-base text-[#6EE7B7] font-serif">
+                    <blockquote className="border-l-2 border-[#10B981] pl-4 italic text-base sm:text-lg text-[#6EE7B7] font-serif">
                         "Your money deserves a smarter direction."
                     </blockquote>
 
-                    <div className="space-y-4 text-[#9CAFA3] text-sm lg:text-base leading-relaxed">
+                    <div className="space-y-4 text-[#9CAFA3] text-xs sm:text-sm leading-relaxed">
                         <p>
                             Managing money isn't just about knowing what you spend. It's about understanding where it goes, anticipating what comes next and making decisions with confidence.
                         </p>
@@ -122,29 +119,32 @@ export default function AboutPage() {
                         <p>
                             By bringing transaction management, smart categorization, AI-powered insights, financial forecasting and savings planning together, PocketPilot helps users turn everyday financial activity into meaningful information.
                         </p>
-                        <p className="text-[#F0FDF4]/90 font-medium pt-2">
+                        <p>
+                            From automatically organizing transactions into relevant spending categories to identifying recurring payments, exploring future balances and planning savings goals, PocketPilot brings the tools for better financial awareness into one place.
+                        </p>
+                        <p className="text-[#F0FDF4]/90 font-medium pt-2 border-t border-[#10B981]/15">
                             We believe technology should empower people, not overwhelm them. Because better financial decisions begin with better financial understanding.
                         </p>
                     </div>
                 </div>
 
-                {/* Right Column: Five Feature Cards */}
-                <div className="lg:col-span-5 flex flex-col gap-4">
+                {/* Right Column: 5 Feature Cards Stack */}
+                <div className="flex flex-col gap-3 w-full">
                     {featureCards.map((card, idx) => {
                         const CardIcon = card.icon;
                         return (
                             <div
                                 key={idx}
-                                className="bg-[#091510] border border-[#10B981]/20 rounded-2xl p-4 lg:p-5 flex items-start gap-4 transition-all hover:border-[#10B981]/40 shadow-xl"
+                                className="bg-[#091510] border border-[#10B981]/20 rounded-xl p-3.5 flex items-start gap-3 hover:border-[#10B981]/50 transition-all shadow-lg w-full"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center shrink-0">
-                                    <CardIcon className="w-5 h-5 text-[#10B981]" />
+                                <div className="w-8 h-8 rounded-lg bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center shrink-0 mt-0.5">
+                                    <CardIcon className="w-4 h-4 text-[#10B981]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold tracking-widest text-[#6EE7B7] uppercase mb-1">
+                                    <h3 className="text-[11px] font-bold tracking-wider text-[#6EE7B7] uppercase mb-0.5">
                                         {card.title}
                                     </h3>
-                                    <p className="text-xs lg:text-sm text-[#9CAFA3] leading-relaxed">
+                                    <p className="text-[11px] text-[#9CAFA3] leading-snug">
                                         {card.description}
                                     </p>
                                 </div>
@@ -152,64 +152,65 @@ export default function AboutPage() {
                         );
                     })}
                 </div>
-
             </div>
 
-            {/* SECTION 2: OUR PHILOSOPHY (Contrasting Light Theme Card) */}
-            <div className="bg-[#F4F7F4] text-[#17251D] rounded-2xl p-6 lg:p-8 shadow-xl">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* SECTION 2: Philosophy Section (Light Panel with 3 Side-by-Side Cards using explicit flex layout) */}
+            <div className="bg-[#F4F7F4] text-[#17251D] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 w-full">
+                <div className="max-w-xl space-y-2">
+                    <span className="text-xs font-bold tracking-widest text-[#087A50] uppercase">
+                        OUR PHILOSOPHY
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-serif font-normal leading-tight">
+                        Technology should empower, not overwhelm.
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#17251D]/75 leading-relaxed">
+                        We believe financial technology should make important information easier to understand, not more complicated. PocketPilot is designed around clarity, transparency and user control.
+                    </p>
+                </div>
 
-                    <div className="lg:col-span-5 space-y-4">
-                        <span className="text-xs font-bold tracking-widest text-[#087A50] uppercase">
-                            OUR PHILOSOPHY
-                        </span>
-
-                        <h2 className="text-2xl lg:text-3xl font-serif text-[#17251D] font-normal leading-tight">
-                            Technology should empower, not overwhelm.
-                        </h2>
-
-                        <p className="text-sm lg:text-base text-[#17251D]/75 leading-relaxed">
-                            We believe financial technology should make important information easier to understand, not more complicated. PocketPilot is designed around clarity, transparency and user control.
-                        </p>
-                    </div>
-
-                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {philosophyCards.map((phi, idx) => {
-                            const PhiIcon = phi.icon;
-                            return (
-                                <div
-                                    key={idx}
-                                    className="bg-[#FFFFFF] border border-[#E2E8E4] rounded-xl p-5 flex flex-col justify-between shadow-sm"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-[#E6F4EA] flex items-center justify-center mb-4">
-                                        <PhiIcon className="w-5 h-5 text-[#087A50]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xs font-bold tracking-wider text-[#087A50] uppercase mb-1">
-                                            {phi.title}
-                                        </h3>
-                                        <p className="text-[11px] text-[#17251D]/75 leading-relaxed">
-                                            {phi.description}
-                                        </p>
-                                    </div>
+                {/* Forced 3-column row via inline style grid to guarantee side-by-side display */}
+                <div
+                    className="w-full"
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        gap: '16px'
+                    }}
+                >
+                    {philosophyCards.map((phi, idx) => {
+                        const PhiIcon = phi.icon;
+                        return (
+                            <div
+                                key={idx}
+                                className="bg-white border border-[#E2E8E4] rounded-xl p-5 flex flex-col justify-between shadow-sm"
+                            >
+                                <div className="w-9 h-9 rounded-lg bg-[#E6F4EA] flex items-center justify-center mb-4">
+                                    <PhiIcon className="w-4 h-4 text-[#087A50]" />
                                 </div>
-                            );
-                        })}
-                    </div>
-
+                                <div>
+                                    <h3 className="text-xs font-bold tracking-wider text-[#087A50] uppercase mb-1">
+                                        {phi.title}
+                                    </h3>
+                                    <p className="text-xs text-[#17251D]/75 leading-relaxed">
+                                        {phi.description}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* SECTION 3: DEVELOPED BY COFFEE CODERS */}
-            <div className="bg-[#091510] border border-[#10B981]/20 rounded-2xl p-6 lg:p-8 space-y-8 shadow-xl">
+            {/* SECTION 3: Developed by Coffee Coders */}
+            <div className="bg-[#091510] border border-[#10B981]/20 rounded-2xl p-6 sm:p-8 space-y-6 w-full shadow-xl">
                 <div className="text-center max-w-xl mx-auto space-y-2">
                     <span className="text-xs font-bold tracking-widest text-[#10B981] uppercase">
                         THE TEAM BEHIND POCKETPILOT
                     </span>
-                    <h2 className="text-2xl lg:text-3xl font-bold text-[#F0FDF4]">
+                    <h2 className="text-xl sm:text-2xl font-serif text-[#F0FDF4]">
                         Developed by Coffee Coders
                     </h2>
-                    <p className="text-xs lg:text-sm text-[#9CAFA3]">
+                    <p className="text-xs text-[#9CAFA3]">
                         Built with curiosity, collaboration and a shared passion for creating smarter financial experiences.
                     </p>
                 </div>
@@ -218,24 +219,22 @@ export default function AboutPage() {
                     {developers.map((dev, idx) => (
                         <div
                             key={idx}
-                            className="bg-[#050B09] border border-[#10B981]/20 rounded-xl p-5 flex flex-col justify-between transition-all hover:border-[#10B981]/50 shadow-md group"
+                            className="bg-[#050B09] border border-[#10B981]/20 rounded-xl p-4 flex flex-col justify-between"
                         >
                             <div className="space-y-3">
-                                <div className="w-9 h-9 rounded-lg bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-lg bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center">
                                     <UserCheck className="w-4 h-4 text-[#10B981]" />
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-semibold text-[#F0FDF4] group-hover:text-[#6EE7B7] transition-colors">
-                                        {dev.name}
-                                    </h3>
-                                </div>
+                                <h3 className="text-sm font-semibold text-[#F0FDF4]">
+                                    {dev.name}
+                                </h3>
                             </div>
 
                             <div className="pt-4 mt-4 border-t border-[#10B981]/10 flex items-center gap-2">
                                 <Mail className="w-3.5 h-3.5 text-[#9CAFA3] shrink-0" />
                                 <a
                                     href={`mailto:${dev.email}`}
-                                    className="text-[11px] text-[#9CAFA3] hover:text-[#10B981] transition-colors truncate"
+                                    className="text-xs text-[#9CAFA3] hover:text-[#10B981] transition-colors truncate"
                                     title={dev.email}
                                 >
                                     {dev.email}

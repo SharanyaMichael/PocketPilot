@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import {
+  Brain,
+  Tags,
+  BarChart3,
+  ShieldCheck,
+  Eye,
+  UserCheck,
+  Mail,
+  Compass,
+  ArrowRight,
+  Target,
+  Settings
+} from 'lucide-react';
+
 import { FinanceProvider } from './context/FinanceContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -233,7 +247,6 @@ function PP() {
             <rect x="42" y="18" width="22" height="10" rx="4" fill="#10B981" />
           </svg>
 
-          {/* Wordmark matching the reference design precisely */}
           <svg className="wordmark-svg" viewBox="0 0 520 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <text x="0" y="75" fontFamily="Inter, system-ui, sans-serif" fontWeight="900" fontSize="76" fill="#F0FDF4" letterSpacing="-1.5">P</text>
             <circle cx="68" cy="53" r="21" fill="none" stroke="#F0FDF4" strokeWidth="13" />
@@ -329,6 +342,7 @@ function DashboardLayout() {
               }
             />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
